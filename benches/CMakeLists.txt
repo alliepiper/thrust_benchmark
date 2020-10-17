@@ -13,16 +13,18 @@ function(tbm_add_bench target_name_var bench_name bench_src thrust_target)
   )
 endfunction()
 
-function(tbm_add_bench_dir bench_dir)
+function(tbm_add_bench_dir)
 
   foreach(thrust_target IN LISTS THRUST_TARGETS)
+    set(bench_dir "${CMAKE_CURRENT_LIST_DIR}")
+
     # TODO Need to eventually get this from the props...they might already
     # exist on the targets made with thrust_create_target. If not, they should.
     #  thrust_get_target_property(config_device ${thrust_target} DEVICE)
     #  thrust_get_target_property(config_prefix ${thrust_target} PREFIX)
 
     file(GLOB bench_srcs
-      RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
+      RELATIVE "${bench_dir}"
       CONFIGURE_DEPENDS
       *.cu *.cpp
     )
@@ -40,4 +42,5 @@ function(tbm_add_bench_dir bench_dir)
   endforeach()
 endfunction()
 
+add_subdirectory(cub)
 add_subdirectory(thrust)

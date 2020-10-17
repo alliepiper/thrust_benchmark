@@ -11,8 +11,6 @@ static void BM_exclusive_scan(benchmark::State& state)
   thrust::device_vector<T> output(state.range(0));
   thrust::sequence(input.begin(), input.end());
 
-  nvbench::cuda_timer timer;
-
   for (auto _ : state)
   {
     (void)_;
