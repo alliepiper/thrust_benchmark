@@ -1,0 +1,8 @@
+# Exclude these commits from git-blame and similar tools.
+# Only add refactor-only commits (e.g. clang-format version changes, etc).
+#
+# To use this file, run the following command from the repo root:
+#
+#  git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+d92d9f8baac5ec48a8f8718dd69f415a45efe372 # Initial clang-format
