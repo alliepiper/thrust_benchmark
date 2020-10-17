@@ -1,11 +1,7 @@
-file(GLOB bench_srcs
-  RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-  CONFIGURE_DEPENDS
-  *.cu *.cpp
-)
+set(TBM_BENCH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
-function(add_bench target_name_var bench_name bench_src thrust_target)
-  set(bench_target bench.${bench_name})
+function(tbm_add_bench target_name_var bench_name bench_src thrust_target)
+  set(bench_target ${bench_name})
   set(${target_name_var} ${bench_target} PARENT_SCOPE)
 
   add_executable(${bench_target} "${bench_src}")
@@ -17,14 +13,31 @@ function(add_bench target_name_var bench_name bench_src thrust_target)
   )
 endfunction()
 
-foreach(thrust_target IN LISTS THRUST_TARGETS)
-  # TODO Need to eventually get this from the props...they might already
-  # exist on the targets made with thrust_create_target. If not, they should.
-  #  thrust_get_target_property(config_device ${thrust_target} DEVICE)
-  #  thrust_get_target_property(config_prefix ${thrust_target} PREFIX)
+function(tbm_add_bench_dir bench_dir)
 
-  foreach(bench_src IN LISTS bench_srcs)
-    get_filename_component(bench_name "${bench_src}" NAME_WLE)
-    add_bench(bench_target ${bench_name} "${bench_src}" ${thrust_target})
+  foreach(thrust_target IN LISTS THRUST_TARGETS)
+    # TODO Need to eventually get this from the props...they might already
+    # exist on the targets made with thrust_create_target. If not, they should.
+    #  thrust_get_target_property(config_device ${thrust_target} DEVICE)
+    #  thrust_get_target_property(config_prefix ${thrust_target} PREFIX)
+
+    file(GLOB bench_srcs
+      RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
+      CONFIGURE_DEPENDS
+      *.cu *.cpp
+    )
+
+    # TODO The cmake_path command (3.19) may have better ways to do this:
+    file(RELATIVE_PATH bench_prefix "${TBM_BENCH_ROOT}" "${bench_dir}")
+    file(TO_CMAKE_PATH "${bench_prefix}" bench_prefix)
+    string(REPLACE "/" "." bench_prefix "${bench_prefix}")
+
+    foreach(bench_src IN LISTS bench_srcs)
+      get_filename_component(bench_name "${bench_src}" NAME_WLE)
+      string(PREPEND bench_name "bench.${bench_prefix}.")
+      tbm_add_bench(bench_target ${bench_name} "${bench_src}" ${thrust_target})
+    endforeach()
   endforeach()
-endforeach()
+endfunction()
+
+add_subdirectory(thrust)
