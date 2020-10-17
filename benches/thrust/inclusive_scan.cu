@@ -5,7 +5,7 @@
 #include <thrust/sequence.h>
 
 template <typename T>
-static void BM_inclusive_scan(benchmark::State& state)
+static void BM_inclusive_scan(benchmark::State &state)
 {
   thrust::device_vector<T> input(state.range(0));
   thrust::device_vector<T> output(state.range(0));

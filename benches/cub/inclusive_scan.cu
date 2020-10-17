@@ -87,8 +87,8 @@ static void BM_inclusive_scan_reuse_tmp(benchmark::State &state)
   state.SetBytesProcessed(input.size() * state.iterations() * sizeof(T));
 }
 BENCHMARK_TEMPLATE(BM_inclusive_scan_reuse_tmp, int)
-->UseManualTime()
+  ->UseManualTime()
   ->Range(1 << 12, 1ll << 28);
 BENCHMARK_TEMPLATE(BM_inclusive_scan_reuse_tmp, float)
-->UseManualTime()
+  ->UseManualTime()
   ->Range(1 << 12, 1ll << 28);

@@ -5,7 +5,7 @@
 #include <thrust/sequence.h>
 
 template <typename T>
-static void BM_reduce(benchmark::State& state)
+static void BM_reduce(benchmark::State &state)
 {
   thrust::device_vector<T> data(state.range(0));
   thrust::sequence(data.begin(), data.end());
