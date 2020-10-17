@@ -10,10 +10,7 @@ function(add_bench target_name_var bench_name bench_src thrust_target)
 
   add_executable(${bench_target} "${bench_src}")
   target_link_libraries(${bench_target} ${thrust_target} nvbench)
-  # TODO We'll also need a way to select a specific CUDA device at runtime.
-  # TODO This needs to be configurable:
   set_target_properties(${bench_target} PROPERTIES
-    CUDA_ARCHITECTURES 75-real
     ARCHIVE_OUTPUT_DIRECTORY "${TBM_LIBRARY_OUTPUT_DIR}"
     LIBRARY_OUTPUT_DIRECTORY "${TBM_LIBRARY_OUTPUT_DIR}"
     RUNTIME_OUTPUT_DIRECTORY "${TBM_EXECUTABLE_OUTPUT_DIR}"
