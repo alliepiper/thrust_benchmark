@@ -4,6 +4,8 @@ project(thrust_benchmark CUDA)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 
+include(cmake/TbmUtilities.cmake)
+
 # Where to put build outputs. Use CMAKE_BINARY_DIR so they'll show up in the
 # top-level project's dir when building Thrust via add_subdirectory.
 set(TBM_LIBRARY_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib")

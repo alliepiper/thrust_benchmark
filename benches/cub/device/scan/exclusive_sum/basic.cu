@@ -11,7 +11,7 @@
 #include <cuda/std/cstdint>
 
 template <typename T>
-static void BM_inclusive_scan(benchmark::State &state)
+static void TBM_alloc_sync(benchmark::State &state)
 {
   using byte = cuda::std::uint8_t;
 
@@ -26,16 +26,16 @@ static void BM_inclusive_scan(benchmark::State &state)
   {
     (void)_;
     size_t tmp_size;
-    cub::DeviceScan::InclusiveSum(nullptr,
+    cub::DeviceScan::ExclusiveSum(nullptr,
                                   tmp_size,
                                   inPtr,
                                   outPtr,
                                   static_cast<int>(input.size()));
     thrust::device_vector<byte> tmp(tmp_size);
-    cub::DeviceScan::InclusiveSum(thrust::raw_pointer_cast(tmp.data()),
+    cub::DeviceScan::ExclusiveSum(thrust::raw_pointer_cast(tmp.data()),
                                   tmp_size,
-                                  input.cbegin(),
-                                  output.begin(),
+                                  inPtr,
+                                  outPtr,
                                   static_cast<int>(input.size()));
     // implicit sync in tmp's destructor
   }
@@ -43,11 +43,11 @@ static void BM_inclusive_scan(benchmark::State &state)
   state.SetItemsProcessed(input.size() * state.iterations());
   state.SetBytesProcessed(input.size() * state.iterations() * sizeof(T));
 }
-BENCHMARK_TEMPLATE(BM_inclusive_scan, int)->Range(1 << 12, 1ll << 28);
-BENCHMARK_TEMPLATE(BM_inclusive_scan, float)->Range(1 << 12, 1ll << 28);
+BENCHMARK_TEMPLATE(TBM_alloc_sync, int)->Range(1 << 12, 1ll << 28);
+BENCHMARK_TEMPLATE(TBM_alloc_sync, float)->Range(1 << 12, 1ll << 28);
 
 template <typename T>
-static void BM_inclusive_scan_reuse_tmp(benchmark::State &state)
+static void TBM_noalloc_nosync(benchmark::State &state)
 {
   using byte = cuda::std::uint8_t;
 
@@ -61,7 +61,7 @@ static void BM_inclusive_scan_reuse_tmp(benchmark::State &state)
   nvbench::cuda_timer timer;
 
   size_t tmp_size;
-  cub::DeviceScan::InclusiveSum(nullptr,
+  cub::DeviceScan::ExclusiveSum(nullptr,
                                 tmp_size,
                                 inPtr,
                                 outPtr,
@@ -73,7 +73,7 @@ static void BM_inclusive_scan_reuse_tmp(benchmark::State &state)
     (void)_;
 
     timer.start();
-    cub::DeviceScan::InclusiveSum(thrust::raw_pointer_cast(tmp.data()),
+    cub::DeviceScan::ExclusiveSum(thrust::raw_pointer_cast(tmp.data()),
                                   tmp_size,
                                   inPtr,
                                   outPtr,
@@ -86,9 +86,9 @@ static void BM_inclusive_scan_reuse_tmp(benchmark::State &state)
   state.SetItemsProcessed(input.size() * state.iterations());
   state.SetBytesProcessed(input.size() * state.iterations() * sizeof(T));
 }
-BENCHMARK_TEMPLATE(BM_inclusive_scan_reuse_tmp, int)
+BENCHMARK_TEMPLATE(TBM_noalloc_nosync, int)
   ->UseManualTime()
   ->Range(1 << 12, 1ll << 28);
-BENCHMARK_TEMPLATE(BM_inclusive_scan_reuse_tmp, float)
+BENCHMARK_TEMPLATE(TBM_noalloc_nosync, float)
   ->UseManualTime()
   ->Range(1 << 12, 1ll << 28);
