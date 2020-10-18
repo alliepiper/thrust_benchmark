@@ -34,8 +34,8 @@ static void BM_exclusive_scan(benchmark::State &state)
     thrust::device_vector<byte> tmp(tmp_size);
     cub::DeviceScan::ExclusiveSum(thrust::raw_pointer_cast(tmp.data()),
                                   tmp_size,
-                                  input.cbegin(),
-                                  output.begin(),
+                                  inPtr,
+                                  outPtr,
                                   static_cast<int>(input.size()));
     // implicit sync in tmp's destructor
   }
@@ -75,8 +75,8 @@ static void BM_exclusive_scan_reuse_tmp(benchmark::State &state)
     timer.start();
     cub::DeviceScan::ExclusiveSum(thrust::raw_pointer_cast(tmp.data()),
                                   tmp_size,
-                                  input.cbegin(),
-                                  output.begin(),
+                                  inPtr,
+                                  outPtr,
                                   static_cast<int>(input.size()));
     timer.stop();
     // Implicit sync in seconds_elapsed()

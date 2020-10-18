@@ -75,8 +75,8 @@ static void BM_inclusive_scan_reuse_tmp(benchmark::State &state)
     timer.start();
     cub::DeviceScan::InclusiveSum(thrust::raw_pointer_cast(tmp.data()),
                                   tmp_size,
-                                  input.cbegin(),
-                                  output.begin(),
+                                  inPtr,
+                                  outPtr,
                                   static_cast<int>(input.size()));
     timer.stop();
     // Implicit sync in seconds_elapsed()
