@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(thrust_benchmark CUDA)
+# CXX needed for fmt
+project(thrust_benchmark CXX CUDA)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 
