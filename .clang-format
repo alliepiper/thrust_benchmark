@@ -49,7 +49,7 @@ PenaltyBreakAssignment: 30
 PenaltyBreakBeforeFirstCallParameter: 50
 PenaltyBreakComment: 0
 PenaltyBreakFirstLessLess: 0
-PenaltyBreakString: 20
+PenaltyBreakString: 70
 PenaltyBreakTemplateDeclaration: 0
 PenaltyExcessCharacter: 100
 PenaltyReturnTypeOnItsOwnLine: 90
