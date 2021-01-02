@@ -25,22 +25,25 @@ void cub_device_reduce_sum(nvbench::state &state, nvbench::type_list<ValueType>)
                          num_inputs);
   thrust::device_vector<nvbench::uint8_t> temp(temp_size);
 
-  nvbench::exec(state,
-                [&data, &temp, &num_inputs](nvbench::launch& launch) {
-                  auto an_lvalue = temp.size();
-                  cub::DeviceReduce::Sum(thrust::raw_pointer_cast(temp.data()),
-                                         an_lvalue,
-                                         data.begin(),
-                                         data.end() - 1,
-                                         data.size() - 1,
-                                         launch.get_stream());
-                });
+  // Enable throughput calculations
+  state.set_items_processed_per_launch(num_inputs);
+  state.set_global_bytes_accessed_per_launch((num_inputs + 1) *
+                                             sizeof(ValueType));
+
+  nvbench::exec(state, [&data, &temp, &temp_size](nvbench::launch &launch) {
+    cub::DeviceReduce::Sum(thrust::raw_pointer_cast(temp.data()),
+                           temp_size,
+                           data.begin(),
+                           data.end() - 1,
+                           data.size() - 1,
+                           launch.get_stream());
+  });
 }
 NVBENCH_CREATE_TEMPLATE(
   cub_device_reduce_sum,
   NVBENCH_TYPE_AXES(nvbench::type_list<int, float, double>))
   .set_name("cub::DeviceReduce::Sum")
   .set_type_axes_names({"ValueType"})
-  .add_int64_power_of_two_axis("NumInputs", {10, 20});
+  .add_int64_power_of_two_axis("NumInputs", nvbench::range(14, 26, 4));
 
 NVBENCH_MAIN
