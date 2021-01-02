@@ -1,5 +1,9 @@
 set(TBM_BENCH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 
+# Why does CMake make it so difficult to enable cuda C++17 with interface
+# properties...Resorting to brute force to unblock.
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++17")
+
 function(tbm_add_bench target_name_var bench_name bench_src thrust_target)
   set(bench_target ${bench_name})
   set(${target_name_var} ${bench_target} PARENT_SCOPE)
