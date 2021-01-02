@@ -44,6 +44,6 @@ NVBENCH_CREATE_TEMPLATE(
   NVBENCH_TYPE_AXES(nvbench::type_list<int, float, double>))
   .set_name("cub::DeviceReduce::Sum")
   .set_type_axes_names({"ValueType"})
-  .add_int64_power_of_two_axis("NumInputs", nvbench::range(14, 26, 4));
+  .add_int64_power_of_two_axis("NumInputs", nvbench::range(20, 28, 4));
 
 NVBENCH_MAIN
