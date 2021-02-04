@@ -6,3 +6,4 @@
 #  git config blame.ignoreRevsFile .git-blame-ignore-revs
 #
 d92d9f8baac5ec48a8f8718dd69f415a45efe372 # Initial clang-format
+48f76798bb60b34c58240df2bd1c55093cfd2be6 # Cleaned up a few files
