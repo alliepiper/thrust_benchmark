@@ -1,23 +1,34 @@
-#include <nvbench/nvbench.h>
+#include <nvbench/nvbench.cuh>
 
 #include <thrust/device_vector.h>
 #include <thrust/scan.h>
 #include <thrust/sequence.h>
 
 template <typename T>
-static void TBM_in_place(benchmark::State &state)
+void in_place(nvbench::state &state, nvbench::type_list<T>)
 {
-  thrust::device_vector<T> data(state.range(0));
+  const auto num_inputs = state.get_int64("NumInputs");
+  thrust::device_vector<T> data(num_inputs);
   thrust::sequence(data.begin(), data.end());
 
-  for (auto _ : state)
-  {
-    (void)_;
-    thrust::inclusive_scan(data.cbegin(), data.cend(), data.begin());
-  }
+  const auto num_bytes = num_inputs * sizeof(T);
+  state.set_global_bytes_accessed_per_launch(2 * num_bytes);
+  state.set_items_processed_per_launch(num_inputs);
 
-  state.SetItemsProcessed(data.size() * state.iterations());
-  state.SetBytesProcessed(data.size() * state.iterations() * sizeof(T));
+  auto &buffer_size_col = state.add_summary("Input Size");
+  buffer_size_col.set_string("hint", "bytes");
+  buffer_size_col.set_int64("value", num_bytes);
+
+  nvbench::exec(state, [&data](nvbench::launch &launch) {
+    thrust::inclusive_scan(thrust::device.on(launch.get_stream()),
+                           data.cbegin(),
+                           data.cend(),
+                           data.begin());
+  });
 }
-BENCHMARK_TEMPLATE(TBM_in_place, int)->Range(1 << 12, 1ll << 28);
-BENCHMARK_TEMPLATE(TBM_in_place, float)->Range(1 << 12, 1ll << 28);
+NVBENCH_CREATE_TEMPLATE(in_place, NVBENCH_TYPE_AXES(nvbench::type_list<double>))
+  .set_name("thrust::inclusive_scan (in-place)")
+  .set_type_axes_names({"T"})
+    .add_int64_power_of_two_axis("NumInputs", nvbench::range(23, 24, 1));
+
+NVBENCH_MAIN
