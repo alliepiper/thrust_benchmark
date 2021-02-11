@@ -9,9 +9,9 @@
 
 using value_types = nvbench::type_list<nvbench::int32_t, nvbench::float32_t>;
 
-template <typename InputType, typename OutputType, typename InitialValueType>
+template <typename InputType, typename OutputType>
 void mixed_types(nvbench::state &state,
-                 nvbench::type_list<InputType, OutputType, InitialValueType>)
+                 nvbench::type_list<InputType, OutputType>)
 {
   const auto size = state.get_int64("Size");
 
@@ -22,6 +22,11 @@ void mixed_types(nvbench::state &state,
 
   const auto input_bytes  = size * sizeof(InputType);
   const auto output_bytes = size * sizeof(OutputType);
+
+  auto &input_size_summary = state.add_summary("InputSize");
+  input_size_summary.set_string("hint", "bytes");
+  input_size_summary.set_int64("value",
+                               static_cast<nvbench::int64_t>(input_bytes));
 
   state.set_global_bytes_accessed_per_launch(input_bytes + output_bytes);
   state.set_items_processed_per_launch(size);
@@ -45,9 +50,9 @@ void mixed_types(nvbench::state &state,
   });
 }
 NVBENCH_CREATE_TEMPLATE(mixed_types,
-                        NVBENCH_TYPE_AXES(value_types, value_types, value_types))
+                        NVBENCH_TYPE_AXES(value_types, value_types))
   .set_name("cub::DeviceScan::ExclusiveSum (mixed types)")
-  .set_type_axes_names({"In", "Out", "Init"})
+  .set_type_axes_names({"In", "Out"})
   .add_int64_power_of_two_axis("Size", nvbench::range(20, 28, 4));
 
 NVBENCH_MAIN;
