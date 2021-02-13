@@ -53,6 +53,6 @@ NVBENCH_CREATE_TEMPLATE(mixed_types,
                         NVBENCH_TYPE_AXES(value_types, value_types))
   .set_name("cub::DeviceScan::ExclusiveSum (mixed types)")
   .set_type_axes_names({"In", "Out"})
-  .add_int64_power_of_two_axis("Size", nvbench::range(20, 28, 4));
+  .add_int64_power_of_two_axis("Size", nvbench::range(24, 28, 2));
 
 NVBENCH_MAIN;
