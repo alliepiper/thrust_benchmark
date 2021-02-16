@@ -29,8 +29,8 @@ void mixed_types(nvbench::state &state,
                            output.begin());
   });
 }
-NVBENCH_CREATE_TEMPLATE(mixed_types,
-                        NVBENCH_TYPE_AXES(value_types, value_types, value_types))
+NVBENCH_BENCH_TYPES(mixed_types,
+                    NVBENCH_TYPE_AXES(value_types, value_types, value_types))
   .set_name("thrust::exclusive_scan (mixed types)")
   .set_type_axes_names({"In", "Out", "Init"})
   .add_int64_power_of_two_axis("Size", nvbench::range(20, 28, 4));

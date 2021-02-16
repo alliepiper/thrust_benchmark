@@ -26,9 +26,10 @@ void in_place(nvbench::state &state, nvbench::type_list<T>)
                            data.begin());
   });
 }
-NVBENCH_CREATE_TEMPLATE(in_place, NVBENCH_TYPE_AXES(nvbench::type_list<double>))
+NVBENCH_BENCH_TYPES(in_place, NVBENCH_TYPE_AXES(nvbench::type_list<double>))
   .set_name("thrust::inclusive_scan (in-place)")
   .set_type_axes_names({"T"})
-    .add_int64_power_of_two_axis("NumInputs", nvbench::range(23, 24, 1));
+    .add_int64_power_of_two_axis("NumInputs", nvbench::range(22, 25, 1))
+  .set_timeout(5);
 
 NVBENCH_MAIN

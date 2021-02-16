@@ -39,7 +39,7 @@ void cub_device_reduce_sum(nvbench::state &state, nvbench::type_list<ValueType>)
                            launch.get_stream());
   });
 }
-NVBENCH_CREATE_TEMPLATE(
+NVBENCH_BENCH_TYPES(
   cub_device_reduce_sum,
   NVBENCH_TYPE_AXES(nvbench::type_list<int, float, double>))
   .set_name("cub::DeviceReduce::Sum")
