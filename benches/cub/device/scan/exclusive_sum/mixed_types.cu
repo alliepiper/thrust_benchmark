@@ -49,10 +49,17 @@ void mixed_types(nvbench::state &state,
                                   launch.get_stream());
   });
 }
+template <typename T>
+void mixed_types(nvbench::state &state,
+                 nvbench::type_list<T, T>)
+{
+  state.skip("Types are not mixed.");
+}
 NVBENCH_CREATE_TEMPLATE(mixed_types,
                         NVBENCH_TYPE_AXES(value_types, value_types))
   .set_name("cub::DeviceScan::ExclusiveSum (mixed types)")
   .set_type_axes_names({"In", "Out"})
-  .add_int64_power_of_two_axis("Size", nvbench::range(24, 32, 2));
+  .add_int64_power_of_two_axis("Size", nvbench::range(16, 32, 1))
+  .set_skip_time(50e-6 /* 50 us */);
 
 NVBENCH_MAIN;
