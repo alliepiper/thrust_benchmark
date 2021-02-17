@@ -19,17 +19,18 @@ void in_place(nvbench::state &state, nvbench::type_list<T>)
   buffer_size_col.set_string("hint", "bytes");
   buffer_size_col.set_int64("value", num_bytes);
 
-  nvbench::exec(state, [&data](nvbench::launch &launch) {
-    thrust::inclusive_scan(thrust::device.on(launch.get_stream()),
-                           data.cbegin(),
-                           data.cend(),
-                           data.begin());
-  });
+  state.exec(nvbench::exec_tag::sync, // thrust algos synchronize
+             [&data](nvbench::launch &launch) {
+               thrust::inclusive_scan(thrust::device.on(launch.get_stream()),
+                                      data.cbegin(),
+                                      data.cend(),
+                                      data.begin());
+             });
 }
 NVBENCH_BENCH_TYPES(in_place, NVBENCH_TYPE_AXES(nvbench::type_list<double>))
   .set_name("thrust::inclusive_scan (in-place)")
   .set_type_axes_names({"T"})
-    .add_int64_power_of_two_axis("NumInputs", nvbench::range(22, 25, 1))
-  .set_timeout(5);
+  .add_int64_power_of_two_axis("NumInputs", nvbench::range(22, 25, 1))
+  .set_timeout(1);
 
 NVBENCH_MAIN

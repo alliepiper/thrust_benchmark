@@ -22,12 +22,13 @@ void mixed_types(nvbench::state &state,
   state.set_global_bytes_accessed_per_launch(input_bytes + output_bytes);
   state.set_items_processed_per_launch(size);
 
-  nvbench::exec(state, [&input, &output](nvbench::launch &launch) {
-    thrust::exclusive_scan(thrust::device.on(launch.get_stream()),
-                           input.cbegin(),
-                           input.cend(),
-                           output.begin());
-  });
+  state.exec(nvbench::exec_tag::sync,
+             [&input, &output](nvbench::launch &launch) {
+               thrust::exclusive_scan(thrust::device.on(launch.get_stream()),
+                                      input.cbegin(),
+                                      input.cend(),
+                                      output.begin());
+             });
 }
 NVBENCH_BENCH_TYPES(mixed_types,
                     NVBENCH_TYPE_AXES(value_types, value_types, value_types))

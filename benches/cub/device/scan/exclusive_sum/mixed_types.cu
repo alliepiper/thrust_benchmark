@@ -39,7 +39,7 @@ void mixed_types(nvbench::state &state,
                                 static_cast<int>(input.size()));
   thrust::device_vector<nvbench::uint8_t> tmp(tmp_size);
 
-  nvbench::exec(state, [&input, &output, &tmp](nvbench::launch &launch) {
+  state.exec([&input, &output, &tmp](nvbench::launch &launch) {
     std::size_t temp_size = tmp.size(); // need an lvalue
     cub::DeviceScan::ExclusiveSum(thrust::raw_pointer_cast(tmp.data()),
                                   temp_size,
