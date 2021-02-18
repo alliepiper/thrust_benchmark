@@ -13,23 +13,16 @@ template <typename InputType, typename OutputType>
 void mixed_types(nvbench::state &state,
                  nvbench::type_list<InputType, OutputType>)
 {
-  const auto size = state.get_int64("Size");
+  const auto size = static_cast<std::size_t>(state.get_int64("Elements"));
 
   thrust::device_vector<InputType> input(size);
   thrust::device_vector<OutputType> output(size);
 
   thrust::sequence(input.begin(), input.end());
 
-  const auto input_bytes  = size * sizeof(InputType);
-  const auto output_bytes = size * sizeof(OutputType);
-
-  auto &input_size_summary = state.add_summary("InputSize");
-  input_size_summary.set_string("hint", "bytes");
-  input_size_summary.set_int64("value",
-                               static_cast<nvbench::int64_t>(input_bytes));
-
-  state.set_global_bytes_accessed_per_launch(input_bytes + output_bytes);
-  state.set_items_processed_per_launch(size);
+  state.add_global_memory_reads<InputType>(size, "InputSize");
+  state.add_global_memory_writes<OutputType>(size, "OutputSize");
+  state.add_element_count(size);
 
   size_t tmp_size;
   cub::DeviceScan::ExclusiveSum(nullptr,
@@ -57,8 +50,8 @@ void mixed_types(nvbench::state &state, nvbench::type_list<T, T>)
 NVBENCH_BENCH_TYPES(mixed_types, NVBENCH_TYPE_AXES(value_types, value_types))
   .set_name("cub::DeviceScan::ExclusiveSum (mixed types)")
   .set_type_axes_names({"In", "Out"})
-  .add_int64_power_of_two_axis("Size", nvbench::range(16, 32, 1))
+  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 32, 1))
   .set_timeout(2)
   .set_skip_time(100e-6 /* us */);
 
-NVBENCH_MAIN;
+NVBENCH_MAIN

@@ -16,7 +16,7 @@ void basic(nvbench::state &state, nvbench::type_list<T>)
 
   thrust::default_random_engine rng;
 
-  state.set_items_processed_per_launch(size);
+  state.set_element_count(size);
 
   using namespace nvbench::exec_tag;
   state.exec(timer | sync, // This benchmark needs a timer and syncs internally

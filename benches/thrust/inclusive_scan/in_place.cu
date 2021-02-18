@@ -7,17 +7,14 @@
 template <typename T>
 void in_place(nvbench::state &state, nvbench::type_list<T>)
 {
-  const auto num_inputs = state.get_int64("NumInputs");
+  const auto num_inputs =
+    static_cast<std::size_t>(state.get_int64("NumInputs"));
   thrust::device_vector<T> data(num_inputs);
   thrust::sequence(data.begin(), data.end());
 
-  const auto num_bytes = num_inputs * sizeof(T);
-  state.set_global_bytes_accessed_per_launch(2 * num_bytes);
-  state.set_items_processed_per_launch(num_inputs);
-
-  auto &buffer_size_col = state.add_summary("Input Size");
-  buffer_size_col.set_string("hint", "bytes");
-  buffer_size_col.set_int64("value", num_bytes);
+  state.add_element_count(num_inputs);
+  state.add_global_memory_reads<T>(num_inputs, "InputSize");
+  state.add_global_memory_writes<T>(num_inputs);
 
   state.exec(nvbench::exec_tag::sync, // thrust algos synchronize
              [&data](nvbench::launch &launch) {

@@ -8,11 +8,14 @@
 template <typename T>
 void basic(nvbench::state &state, nvbench::type_list<T>)
 {
-  const auto size = state.get_int64("Size");
+  const auto size = static_cast<std::size_t>(state.get_int64("Size"));
 
   thrust::device_vector<T> data(static_cast<std::size_t>(size));
   thrust::sequence(data.begin(), data.end());
-  state.set_items_processed_per_launch(size);
+
+  state.add_element_count(size);
+  state.add_global_memory_reads<T>(size);
+  state.add_global_memory_writes<T>(size);
 
   auto do_engine = [&state, &data](auto &&engine) {
     using namespace nvbench::exec_tag;
