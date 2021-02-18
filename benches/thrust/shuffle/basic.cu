@@ -8,14 +8,14 @@
 template <typename T>
 void basic(nvbench::state &state, nvbench::type_list<T>)
 {
-  const auto size = static_cast<std::size_t>(state.get_int64("Size"));
+  const auto elements = static_cast<std::size_t>(state.get_int64("Elements"));
 
-  thrust::device_vector<T> data(static_cast<std::size_t>(size));
+  thrust::device_vector<T> data(elements);
   thrust::sequence(data.begin(), data.end());
 
-  state.add_element_count(size);
-  state.add_global_memory_reads<T>(size);
-  state.add_global_memory_writes<T>(size);
+  state.add_element_count(elements);
+  state.add_global_memory_reads<T>(elements);
+  state.add_global_memory_writes<T>(elements);
 
   auto do_engine = [&state, &data](auto &&engine) {
     using namespace nvbench::exec_tag;
@@ -51,8 +51,9 @@ using types = nvbench::type_list<nvbench::uint8_t,
 NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
   .set_name("thrust::shuffle")
   .set_type_axes_names({"T"})
-  .add_int64_power_of_two_axis("Size", nvbench::range(20, 32, 2))
+  .add_int64_power_of_two_axis("Elements", nvbench::range(20, 32, 2))
   .add_string_axis("Engine", {"minstd", "ranlux24", "ranlux48", "taus88"})
-  .set_timeout(5);
+  .set_timeout(2)
+  .set_skip_time(100e-6 /* us */);
 
 NVBENCH_MAIN

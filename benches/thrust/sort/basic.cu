@@ -9,14 +9,16 @@
 template <typename T>
 void basic(nvbench::state &state, nvbench::type_list<T>)
 {
-  const auto size = state.get_int64("Size");
+  const auto elements = static_cast<std::size_t>(state.get_int64("Elements"));
 
-  thrust::device_vector<T> data(static_cast<std::size_t>(size));
+  thrust::device_vector<T> data(elements);
   thrust::sequence(data.begin(), data.end());
 
   thrust::default_random_engine rng;
 
-  state.set_element_count(size);
+  state.add_element_count(elements);
+  state.add_global_memory_reads<T>(elements);
+  state.add_global_memory_writes<T>(elements);
 
   using namespace nvbench::exec_tag;
   state.exec(timer | sync, // This benchmark needs a timer and syncs internally
@@ -37,6 +39,6 @@ using types = nvbench::type_list<nvbench::uint8_t,
 NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
   .set_name("thrust::sort (random)")
   .set_type_axes_names({"T"})
-  .add_int64_power_of_two_axis("Size", nvbench::range(20, 32, 2));
+  .add_int64_power_of_two_axis("Elements", nvbench::range(20, 32, 2));
 
 NVBENCH_MAIN

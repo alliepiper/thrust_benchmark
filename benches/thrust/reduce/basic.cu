@@ -1,24 +1,40 @@
-#include <nvbench/nvbench.h>
+#include <nvbench/nvbench.cuh>
 
 #include <thrust/device_vector.h>
 #include <thrust/reduce.h>
 #include <thrust/sequence.h>
 
 template <typename T>
-static void TBM_basic(benchmark::State &state)
+void basic(nvbench::state &state, nvbench::type_list<T>)
 {
-  thrust::device_vector<T> data(state.range(0));
+  const auto elements = static_cast<std::size_t>(state.get_int64("Elements"));
+  thrust::device_vector<T> data(elements);
   thrust::sequence(data.begin(), data.end());
 
-  for (auto _ : state)
-  {
-    (void)_;
-    const auto result = thrust::reduce(data.begin(), data.end());
-    benchmark::DoNotOptimize(result);
-  }
+  state.add_element_count(elements);
+  state.add_global_memory_reads<T>(elements, "Size");
+  state.add_global_memory_writes<T>(1);
 
-  state.SetItemsProcessed(data.size() * state.iterations());
-  state.SetBytesProcessed(data.size() * state.iterations() * sizeof(T));
+  state.exec(nvbench::exec_tag::sync, // thrust algos sync internally
+             [&data](nvbench::launch &launch) {
+               const auto result =
+                 thrust::reduce(thrust::device.on(launch.get_stream()),
+                                data.begin(),
+                                data.end());
+             });
 }
-BENCHMARK_TEMPLATE(TBM_basic, int)->Range(1 << 12, 1ll << 29);
-BENCHMARK_TEMPLATE(TBM_basic, float)->Range(1 << 12, 1ll << 29);
+using types = nvbench::type_list<nvbench::int8_t,
+                                 nvbench::int16_t,
+                                 nvbench::int32_t,
+                                 nvbench::int64_t,
+                                 nvbench::float32_t,
+                                 nvbench::float64_t>;
+NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
+  .set_name("thrust::reduce")
+  .set_type_axes_names({"T"})
+  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 32, 2))
+  // Speed things up:
+  .set_skip_time(50e-6 /* 50 us */)
+  .set_timeout(2);
+
+NVBENCH_MAIN
