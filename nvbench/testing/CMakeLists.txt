@@ -12,6 +12,7 @@ set(test_srcs
   state.cu
   state_generator.cu
   string_axis.cu
+  tuning_test.cu
   type_axis.cu
   type_list.cu
 )
