@@ -50,7 +50,6 @@ using types = nvbench::type_list<nvbench::uint8_t,
                                  nvbench::uint64_t>;
 NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
   .set_name("thrust::shuffle")
-  .set_type_axes_names({"T"})
   .add_int64_power_of_two_axis("Elements", nvbench::range(20, 32, 2))
   .add_string_axis("Engine", {"minstd", "ranlux24", "ranlux48", "taus88"})
   .set_timeout(2)

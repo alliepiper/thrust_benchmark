@@ -32,7 +32,6 @@ using types = nvbench::type_list<nvbench::uint8_t,
                                  nvbench::float64_t>;
 NVBENCH_BENCH_TYPES(in_place, NVBENCH_TYPE_AXES(types))
   .set_name("thrust::inclusive_scan (in-place)")
-  .set_type_axes_names({"T"})
   .add_int64_power_of_two_axis("Elements", nvbench::range(16, 32, 2))
   // Speed things up:
   .set_skip_time(50e-6 /* 50 us */)
