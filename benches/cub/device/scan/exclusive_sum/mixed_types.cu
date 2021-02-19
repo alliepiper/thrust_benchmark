@@ -52,5 +52,3 @@ NVBENCH_BENCH_TYPES(mixed_types, NVBENCH_TYPE_AXES(value_types, value_types))
   .add_int64_power_of_two_axis("Elements", nvbench::range(16, 32, 2))
   .set_timeout(2)
   .set_skip_time(100e-6 /* us */);
-
-NVBENCH_MAIN

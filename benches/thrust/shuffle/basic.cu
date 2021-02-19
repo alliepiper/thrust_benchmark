@@ -55,5 +55,3 @@ NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
   .add_string_axis("Engine", {"minstd", "ranlux24", "ranlux48", "taus88"})
   .set_timeout(2)
   .set_skip_time(100e-6 /* us */);
-
-NVBENCH_MAIN

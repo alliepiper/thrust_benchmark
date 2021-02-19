@@ -40,5 +40,3 @@ NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
   .set_name("thrust::sort (random)")
   .set_type_axes_names({"T"})
   .add_int64_power_of_two_axis("Elements", nvbench::range(20, 32, 2));
-
-NVBENCH_MAIN

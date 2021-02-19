@@ -37,5 +37,3 @@ NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
   // Speed things up:
   .set_skip_time(50e-6 /* 50 us */)
   .set_timeout(2);
-
-NVBENCH_MAIN
