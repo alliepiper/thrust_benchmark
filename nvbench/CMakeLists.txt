@@ -15,5 +15,7 @@ CPMAddPackage(
   GIT_TAG 7.1.3
 )
 
+find_package(CUDAToolkit COMPONENTS nvml REQUIRED)
+
 add_subdirectory(nvbench)
 add_subdirectory(testing)

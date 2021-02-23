@@ -5,6 +5,10 @@
 
 #include <cuda_runtime_api.h>
 
+#define NVBENCH_NVML_UTILITY_GUARD
+#include <nvbench/internal/nvml_utility.cuh>
+#undef NVBENCH_NVML_UTILITY_GUARD
+
 namespace nvbench
 {
 
@@ -19,9 +23,12 @@ device_info::memory_info device_info::get_global_memory_usage() const
 
 device_info::device_info(int id)
     : m_id{id}
-    , m_prop{}
 {
   NVBENCH_CUDA_CALL(cudaGetDeviceProperties(&m_prop, m_id));
+  if (nvbench::internal::nvml::context)
+  {
+    m_nvml_device = nvbench::internal::nvml::cudaDevicePropToNvmlDevice(m_prop);
+  }
 }
 
 } // namespace nvbench

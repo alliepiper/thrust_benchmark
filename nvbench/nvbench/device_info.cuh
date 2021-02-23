@@ -2,12 +2,18 @@
 
 #include <nvbench/cuda_call.cuh>
 #include <nvbench/detail/device_scope.cuh>
+#include <nvbench/types.cuh>
 
 #include <cuda_runtime_api.h>
 
 #include <cstdint> // CHAR_BIT
+#include <optional>
 #include <string_view>
 #include <utility>
+
+// Forward declare nvml types:
+struct nvmlDevice_st;
+using nvmlDevice_t = nvmlDevice_st *;
 
 namespace nvbench
 {
@@ -43,10 +49,7 @@ struct device_info
     return id == m_id;
   }
 
-  void set_active() const
-  {
-    NVBENCH_CUDA_CALL(cudaSetDevice(m_id));
-  }
+  void set_active() const { NVBENCH_CUDA_CALL(cudaSetDevice(m_id)); }
 
   /// @return The SM version of the current device as (major*100) + (minor*10).
   [[nodiscard]] int get_sm_version() const
@@ -163,6 +166,59 @@ struct device_info
     return m_prop;
   }
 
+  struct perf_state
+  {
+    /// Device throttle reason flags:
+    enum class throttle_flag : nvbench::int64_t
+    { // Flags follow nvml definitions
+      none                = 0x0ll,
+      idle                = 0x1ll,
+      app_clocks          = 0x2ll,
+      sw_power_cap        = 0x4ll,
+      hw_slowdown         = 0x8ll,
+      sync_boost          = 0x10ll,
+      sw_thermal_slowdown = 0x20ll,
+      hw_thermal_slowdown = 0x40ll,
+      hw_power_brake      = 0x80ll,
+      display_clocks      = 0x100ll
+    };
+
+    std::optional<throttle_flag> throttle_reason;
+
+    /// The current actual clock speed in Hz. @{
+    std::optional<std::size_t> clock_sm;
+    std::optional<std::size_t> clock_mem;
+    /// @}
+
+    /// The current application clock setting in Hz. @{
+    std::optional<std::size_t> application_clock_sm;
+    std::optional<std::size_t> application_clock_mem;
+    /// @}
+
+    /// The current device utilitization rates, as a percentage of peak. @{
+    std::optional<std::size_t> utilization_sm;
+    std::optional<std::size_t> utilization_mem;
+
+    /// True if auto_boosted_clocks are enabled.
+    std::optional<bool> auto_boosted_clocks_enabled{};
+
+    /// The current temperature of the device in celsius.
+    std::optional<std::size_t> temp_current;
+
+    /// Threshold temperature. @{
+    std::optional<std::size_t> temp_thresh_mem_max;
+    std::optional<std::size_t> temp_thresh_sm_max;
+    std::optional<std::size_t> temp_thresh_hw_slowdown;
+    std::optional<std::size_t> temp_thresh_hw_shutdown;
+    /// @}
+
+    /// Current power usage in watts.
+    std::optional<std::size_t> power_usage;
+
+    /// Power state. Integer between 0 (max perf) and 15(min perf).
+    std::optional<int> power_state;
+  };
+
   [[nodiscard]] bool operator==(const device_info &o) const
   {
     return m_id == o.m_id;
@@ -173,8 +229,9 @@ struct device_info
   }
 
 private:
-  int m_id;
-  cudaDeviceProp m_prop;
+  int m_id{};
+  cudaDeviceProp m_prop{};
+  std::optional<nvmlDevice_t> m_nvml_device{};
 };
 
 // get_ptx_version implementation; this needs to stay in the header so it will

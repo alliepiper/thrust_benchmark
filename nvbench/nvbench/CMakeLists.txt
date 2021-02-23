@@ -28,7 +28,7 @@ add_library(nvbench::nvbench ALIAS nvbench)
 
 # TODO generator expressions for installed paths
 target_include_directories(nvbench PUBLIC "${nvbench_SOURCE_DIR}")
-target_link_libraries(nvbench PRIVATE fmt::fmt)
+target_link_libraries(nvbench PRIVATE fmt::fmt CUDA::nvml)
 target_compile_features(nvbench PUBLIC cuda_std_17)
 
 add_library(nvbench_main OBJECT main.cu)
