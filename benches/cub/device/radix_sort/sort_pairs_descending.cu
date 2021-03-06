@@ -76,4 +76,4 @@ using types = nvbench::type_list<nvbench::uint8_t,
 NVBENCH_BENCH_TYPES(sort_pairs_descending, NVBENCH_TYPE_AXES(types, types))
   .set_name("cub::DeviceRadixSort::SortPairs")
   .set_type_axes_names({"Key", "Value"})
-  .add_int64_power_of_two_axis("Elements", nvbench::range(21, 31, 2));
+  .add_int64_power_of_two_axis("Elements", nvbench::range(20, 30, 2));
