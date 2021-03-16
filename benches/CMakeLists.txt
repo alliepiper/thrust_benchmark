@@ -5,7 +5,7 @@ function(tbm_add_bench target_name_var bench_name bench_src thrust_target)
   set(${target_name_var} ${bench_target} PARENT_SCOPE)
 
   add_executable(${bench_target} "${bench_src}")
-  target_link_libraries(${bench_target} ${thrust_target} nvbench::main)
+  target_link_libraries(${bench_target} ${thrust_target} nvbench::main fmt::fmt)
   set_target_properties(${bench_target} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${TBM_LIBRARY_OUTPUT_DIR}"
     LIBRARY_OUTPUT_DIRECTORY "${TBM_LIBRARY_OUTPUT_DIR}"
@@ -23,7 +23,6 @@ function(tbm_add_bench_dir bench_dir)
     file(GLOB bench_srcs
       CONFIGURE_DEPENDS
       "${bench_dir}/*.cu"
-      "${bench_dir}/*.cpp"
     )
 
     # TODO The cmake_path command (3.19) may have better ways to do this:

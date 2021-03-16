@@ -6,6 +6,14 @@ project(thrust_benchmark CXX CUDA)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 
+include(CPM)
+
+CPMAddPackage(
+  NAME fmt
+  GITHUB_REPOSITORY fmtlib/fmt
+  GIT_TAG 7.1.3
+)
+
 include(cmake/TbmUtilities.cmake)
 
 # Where to put build outputs. Use CMAKE_BINARY_DIR so they'll show up in the
