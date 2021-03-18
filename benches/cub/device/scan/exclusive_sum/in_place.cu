@@ -46,6 +46,6 @@ using types = nvbench::type_list<nvbench::uint8_t,
                                  nvbench::float64_t>;
 NVBENCH_BENCH_TYPES(in_place, NVBENCH_TYPE_AXES(types))
   .set_name("cub::DeviceScan::ExclusiveSum (in_place)")
-  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 32, 2))
+  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 30, 2))
   .set_timeout(2)
   .set_skip_time(100e-6 /* us */);
