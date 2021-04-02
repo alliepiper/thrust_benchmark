@@ -133,8 +133,8 @@ struct range_generator_needs_reset<T, IteratorStyle, data_pattern::none>
 // random_value_generator<T>
 //==============================================================================
 
-// stateful host/device random number generator. Generates a uniformly
-// distributed number from T's full range of values.
+// stateful host/device random number generator. Generates uniformly
+// distributed random numbers from T's full range of values.
 template <typename T>
 struct random_value_generator
 {
@@ -178,9 +178,9 @@ private:
 //==============================================================================
 
 template <typename T,
-          iterator_style IteratorStyle,
-          data_pattern DataPattern = data_pattern::none,
-          typename                 = void>
+          iterator_style IteratorStyle = iterator_style::pointer,
+          data_pattern DataPattern     = data_pattern::none,
+          typename                     = void>
 struct range_generator;
 
 // Implementation for storage-less iterators
