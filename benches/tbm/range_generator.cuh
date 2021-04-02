@@ -138,12 +138,26 @@ struct range_generator_needs_reset<T, IteratorStyle, data_pattern::none>
 template <typename T>
 struct random_value_generator
 {
-  explicit random_value_generator(thrust::default_random_engine engine)
+  // This functor will call `engine.discard(n)` with large values of n. The
+  // default engine is optimized to do this in O(log(n)) time, all others use
+  // O(n). Changing this will have a large impact on performance.
+  using engine_t = thrust::default_random_engine;
+
+  explicit random_value_generator(engine_t engine)
       : m_engine{engine}
   {}
 
-  __host__ __device__ T operator()()
+  template <typename IndexType>
+  __host__ __device__ T operator()(IndexType i)
   {
+    using discard_type = unsigned long long;
+
+    // Discard multiple values per index in case the distribution uses more than
+    // one to generate the result.
+    constexpr auto discard_per_i = static_cast<discard_type>(50);
+    const auto num_discard = static_cast<discard_type>(i * discard_per_i);
+    // This is optimized to O(log(n)) in thrust's default engine:
+    m_engine.discard(num_discard);
     return static_cast<T>(m_distribution(m_engine));
   }
 
@@ -154,7 +168,7 @@ private:
                        thrust::uniform_real_distribution<T>,
                        thrust::uniform_int_distribution<T>>;
 
-  thrust::default_random_engine m_engine{};
+  engine_t m_engine{};
   distribution_t m_distribution{std::numeric_limits<T>::lowest(),
                                 std::numeric_limits<T>::max()};
 };
@@ -324,9 +338,7 @@ struct range_generator<
       else if constexpr (DataPattern == data_pattern::random)
       {
         auto &engine = m_engine.value();
-
-        // TODO thrust::async::generate and overlap with engine.discard(...)
-        thrust::generate(m_data.begin(),
+        thrust::tabulate(m_data.begin(),
                          m_data.end(),
                          random_value_generator<T>{engine});
 

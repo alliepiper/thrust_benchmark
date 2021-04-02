@@ -153,8 +153,8 @@ sort_keys(nvbench::state &state,
                      begin_bit,
                      end_bit,
                      launch.get_stream()));
-                   timer.stop();
                  }
+                 timer.stop();
                });
   }
 }
