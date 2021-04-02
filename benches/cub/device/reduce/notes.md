@@ -14,3 +14,7 @@ Sum, however, is specialized for the following types (see `WarpReduceShfl`):
 Calling `cub::DeviceReduce::Sum(...)` vs
 `cub::DeviceReduce::Reduce(..., cub::Sum{})` makes no difference. `Sum` just
 calls `Reduce(..., Sum{})` internally.
+
+# `ReduceByKey`
+
+Reduce by key is a completely separate kernel.
