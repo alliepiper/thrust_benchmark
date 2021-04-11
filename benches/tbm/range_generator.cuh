@@ -72,11 +72,12 @@ struct range_generator_is_valid<T, iterator_style::counting, DataPattern>
 {
   static bool should_skip(nvbench::state &state)
   {
-    if constexpr (!value)
+    constexpr auto valid = range_generator_is_valid::value;
+    if constexpr (!valid)
     {
       state.skip("Counting iterators only provide sequence patterns.");
     }
-    return !value;
+    return !valid;
   }
 };
 
@@ -88,11 +89,12 @@ struct range_generator_is_valid<T, iterator_style::constant, DataPattern>
 {
   static bool should_skip(nvbench::state &state)
   {
-    if constexpr (!value)
+    constexpr auto valid = range_generator_is_valid::value;
+    if constexpr (!valid)
     {
       state.skip("Constant iterators only provide constant patterns.");
     }
-    return !value;
+    return !valid;
   }
 };
 
@@ -103,11 +105,12 @@ struct range_generator_is_valid<T, iterator_style::discard, DataPattern>
 {
   static bool should_skip(nvbench::state &state)
   {
-    if constexpr (!value)
+    constexpr auto valid = range_generator_is_valid::value;
+    if constexpr (!valid)
     {
       state.skip("Discard iterators only support `data_pattern::none`.");
     }
-    return !value;
+    return !valid;
   }
 };
 
