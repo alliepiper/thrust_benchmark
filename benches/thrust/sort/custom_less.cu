@@ -7,12 +7,21 @@
 #include <thrust/sort.h>
 
 /*
- * Arithmetic types with the default comparator lead to
- * cub::DeviceRadixSort usage.
+ * Arithmetic types with the custom comparator lead to merge sort usage.
  */
 
+class less_comparator
+{
+public:
+  template <typename T>
+  __device__ bool operator()(T i, T j) noexcept
+  {
+    return i < j;
+  }
+};
+
 template <typename T>
-void basic(nvbench::state &state, nvbench::type_list<T>)
+void custom_less(nvbench::state &state, nvbench::type_list<T>)
 {
   const auto elements = static_cast<std::size_t>(state.get_int64("Elements"));
 
@@ -31,7 +40,7 @@ void basic(nvbench::state &state, nvbench::type_list<T>)
                const auto policy = thrust::device.on(launch.get_stream());
                thrust::shuffle(policy, data.begin(), data.end(), rng);
                timer.start();
-               thrust::sort(policy, data.begin(), data.end());
+               thrust::sort(policy, data.begin(), data.end(), less_comparator());
                timer.stop();
              });
 }
@@ -41,6 +50,6 @@ using types = nvbench::type_list<nvbench::uint8_t,
                                  nvbench::uint64_t,
                                  nvbench::float32_t,
                                  nvbench::float64_t>;
-NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
-  .set_name("thrust::sort (random)")
+NVBENCH_BENCH_TYPES(custom_less, NVBENCH_TYPE_AXES(types))
+  .set_name("thrust::sort<custom_less> (random)")
   .add_int64_power_of_two_axis("Elements", nvbench::range(20, 30, 2));
