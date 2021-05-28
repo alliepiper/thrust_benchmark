@@ -43,10 +43,11 @@ enum class iterator_style
 /*! Types of input data pattern. */
 enum class data_pattern
 {
-  none,     ///< Unspecified.
-  sequence, ///< A sequence of [0, size).
-  constant, ///< A constant array containing values of `T{42}`.
-  random    ///< Random values uniformly distributed across `T`'s value range.
+  none,            ///< Unspecified.
+  sequence,        ///< A sequence of [0, size).
+  modulo_sequence, ///< A sequence of [0 % B, 1 % B, ..., size % B)
+  constant,        ///< A constant array containing values of `T{42}`.
+  random           ///< Random values uniformly distributed across `T`'s value range.
 };
 
 //==============================================================================
@@ -210,7 +211,7 @@ struct range_generator<
     return std::false_type{};
   }
 
-  void init(std::size_t size) { m_size = size; }
+  void init(std::size_t size, std::size_t /* modulo */) { m_size = size; }
 
   [[nodiscard]] bool should_skip(nvbench::state &state) const
   {
@@ -283,6 +284,23 @@ private:
   std::size_t m_size{};
 };
 
+template <typename T>
+class ModuloUnaryOp
+{
+  std::size_t m_modulo = 1;
+
+public:
+  explicit ModuloUnaryOp(std::size_t modulo)
+      : m_modulo(modulo)
+  {}
+
+  template <typename IndexType>
+  __device__ T operator()(const IndexType& index)
+  {
+    return index % m_modulo;
+  }
+};
+
 // Implementation for global-memory backed iterators
 template <typename T, iterator_style IteratorStyle, data_pattern DataPattern>
 struct range_generator<
@@ -306,13 +324,15 @@ struct range_generator<
     return range_generator_needs_reset<T, IteratorStyle, DataPattern>{};
   }
 
-  void init(std::size_t size)
+  void init(std::size_t size, std::size_t modulo)
   {
+    m_modulo = modulo;
     m_data.resize(size);
     if constexpr (DataPattern == data_pattern::random)
     {
       m_engine = thrust::default_random_engine{};
     }
+
     this->reset();
   }
 
@@ -348,6 +368,12 @@ struct range_generator<
         // Manually advance the host-side engine to a new set of values since
         // the above only increments the engine on the device copy.
         engine.discard(m_data.size());
+      }
+      else if constexpr (DataPattern == data_pattern::modulo_sequence)
+      {
+        thrust::tabulate(m_data.begin(),
+                         m_data.end(),
+                         ModuloUnaryOp<T>(m_modulo));
       }
     }
   }
@@ -408,6 +434,7 @@ struct range_generator<
   }
 
 private:
+  std::size_t m_modulo = 1;
   thrust::device_vector<T> m_data;
   std::optional<thrust::default_random_engine> m_engine;
 };
@@ -415,11 +442,11 @@ private:
 template <typename T,
           iterator_style IteratorStyle = iterator_style::pointer,
           data_pattern DataPattern     = data_pattern::none>
-[[nodiscard]] auto make_range_generator(std::size_t size)
+[[nodiscard]] auto make_range_generator(std::size_t size, std::size_t modulo=1)
 {
   using result_t = tbm::range_generator<T, IteratorStyle, DataPattern>;
   result_t result;
-  result.init(size);
+  result.init(size, modulo);
   return result;
 }
 
@@ -474,6 +501,8 @@ NVBENCH_DECLARE_ENUM_TYPE_STRINGS(
         return "None";
       case tbm::data_pattern::sequence:
         return "Seq";
+      case tbm::data_pattern::modulo_sequence:
+        return "ModSeq";
       case tbm::data_pattern::constant:
         return "Const";
       case tbm::data_pattern::random:
@@ -490,6 +519,8 @@ NVBENCH_DECLARE_ENUM_TYPE_STRINGS(
         return "Unspecified.";
       case tbm::data_pattern::sequence:
         return "Sequence of [0, size)";
+      case tbm::data_pattern::modulo_sequence:
+        return "A sequence of [0 % B, 1 % B, ..., size % B)";
       case tbm::data_pattern::constant:
         return "All values = 42";
       case tbm::data_pattern::random:
