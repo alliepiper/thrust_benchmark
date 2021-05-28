@@ -34,7 +34,7 @@ struct complex_op
   }
 };
 
-using cub_custom_op = nvbench::type_list<complex_op<2>, complex_op<4>>;
+using cub_custom_op = nvbench::type_list<complex_op<128>>;
 using fp_value_types = nvbench::type_list<nvbench::float32_t>;
 
 // Sweep though various input iterators and patterns using cub::Max and

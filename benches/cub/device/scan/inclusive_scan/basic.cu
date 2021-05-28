@@ -72,10 +72,10 @@ static void basic(nvbench::state &state,
   });
 }
 using types = nvbench::type_list<nvbench::float32_t>;
-using ops = nvbench::enum_type_list<1>;
+using ops = nvbench::enum_type_list<64>;
 NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types, ops))
   .set_name("cub::DeviceScan::InclusiveScan")
-  .add_int64_power_of_two_axis("Elements", nvbench::range(26, 26, 2))
+  .add_int64_power_of_two_axis("Elements", nvbench::range(22, 28, 2))
   .set_timeout(21)
   .set_max_noise(0.1)
   .set_skip_time(100e-6 /* us */);
