@@ -15,7 +15,6 @@ static void basic(nvbench::state &state,
                                      nvbench::enum_type<BinsCount>,
                                      nvbench::enum_type<Pattern>>)
 {
-  // Compilation is broken for size_t, why?
   const auto elements = static_cast<int>(state.get_int64("Elements"));
 
   auto input =

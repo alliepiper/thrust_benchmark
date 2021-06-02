@@ -60,11 +60,14 @@ static void basic(nvbench::state &state,
   thrust::device_vector<T> output(elements);
   thrust::device_vector<T> num_selected(1);
 
-  state.add_element_count(elements);
-  state.add_global_memory_reads(elements);
-  state.add_global_memory_writes(elements);
+  complex_select_op<T, OperationsCount> select_op{0.42f};
 
-  auto select_op = complex_select_op<T, OperationsCount>(0.42f);
+  auto selected_elements =
+    thrust::count_if(thrust::device, input.cbegin(), input.cend(), select_op);
+
+  state.add_element_count(elements);
+  state.add_global_memory_reads(input.get_allocation_size());
+  state.add_global_memory_writes<T>(selected_elements);
 
   size_t tmp_size;
   cub::DeviceSelect::If(nullptr,
@@ -90,7 +93,7 @@ static void basic(nvbench::state &state,
 }
 
 // Column names for type axes:
-inline std::vector<std::string> histogram_type_axis_names()
+inline std::vector<std::string> select_if_type_axis_names()
 {
   return {"T", "Op", "Pattern"};
 }
@@ -108,5 +111,5 @@ using all_input_data_patterns =
 NVBENCH_BENCH_TYPES(basic,
                     NVBENCH_TYPE_AXES(types, ops, all_input_data_patterns))
   .set_name("cub::DeviceSelect::If")
-  .set_type_axes_names(histogram_type_axis_names())
+  .set_type_axes_names(select_if_type_axis_names())
   .add_int64_power_of_two_axis("Elements", nvbench::range(22, 28, 2));

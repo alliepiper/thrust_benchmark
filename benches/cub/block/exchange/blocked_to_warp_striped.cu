@@ -20,4 +20,4 @@ NVBENCH_BENCH_TYPES(bench,
                                       compute_modes))
   .set_name("cub::BlockExchange::BlockedToWarpStriped")
   .set_type_axes_names(block_exchange_type_axis_names())
-  .add_int64_power_of_two_axis("Blocks", nvbench::range(20, 22, 2));
+  .add_int64_power_of_two_axis("Elements", nvbench::range(20, 22, 2));

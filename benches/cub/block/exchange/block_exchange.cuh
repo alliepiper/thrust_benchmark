@@ -38,7 +38,9 @@ __device__ void do_not_optimize(int *output,
   }
 
   if (count)
+  {
     output[linear_id] = count;
+  }
 }
 
 // This kernel is used to check that runtime of BlockExchange methods
@@ -65,8 +67,9 @@ __global__ void kernel(const T *input, int *output)
 
   fill_thread_data(input, thread_data, linear_id);
 
-  typedef cub::BlockExchange<T, ThreadsInBlock, ItemsPerThread, WarpTimeSlicing>
-    BlockExchange;
+  using BlockExchange =
+    cub::BlockExchange<T, ThreadsInBlock, ItemsPerThread, WarpTimeSlicing>;
+
   __shared__ typename BlockExchange::TempStorage temp_storage;
 
   BlockExchange exchange(temp_storage);
@@ -100,8 +103,7 @@ static void bench(nvbench::state &state,
                                      nvbench::enum_type<ItemsPerThread>,
                                      nvbench::enum_type<ComputeMode>>)
 {
-  const auto blocks           = static_cast<size_t>(state.get_int64("Blocks"));
-  const unsigned int elements = blocks;
+  const auto elements = static_cast<std::size_t>(state.get_int64("Elements"));
 
   state.add_element_count(elements);
   state.add_global_memory_reads<T>(elements);
@@ -110,23 +112,33 @@ static void bench(nvbench::state &state,
   thrust::fill_n(input.begin(), elements, T());
 
   state.exec([&](nvbench::launch &launch) {
-    if (compute_mode::reference == ComputeMode)
+    /**
+     * All kernels below read some data and count the number it elements
+     * exceeding 42. The result is only written if there is at least one
+     * item with a value greater than 42. Because the data is filled with
+     * zeroes, there are no writes to the output array. Therefore, there
+     * is no need in allocating it. This trick is done to prevent the
+     * compiler from optimizing the code.
+     */
+    int *output = nullptr;
+
+    if constexpr(compute_mode::reference == ComputeMode)
     {
       kernel_reference<T, ItemsPerThread>
-        <<<blocks, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
-                                     nullptr);
+        <<<elements, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
+                                       output);
     }
-    else if (compute_mode::exchange == ComputeMode)
+    else if constexpr(compute_mode::exchange == ComputeMode)
     {
       kernel<T, OperationType, ThreadsInBlock, ItemsPerThread, false>
-        <<<blocks, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
-                                     nullptr);
+        <<<elements, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
+                                       output);
     }
-    else if (compute_mode::exchange_warp_time_slicing == ComputeMode)
+    else if constexpr(compute_mode::exchange_warp_time_slicing == ComputeMode)
     {
       kernel<T, OperationType, ThreadsInBlock, ItemsPerThread, true>
-        <<<blocks, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
-                                     nullptr);
+        <<<elements, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
+                                       output);
     }
   });
 }

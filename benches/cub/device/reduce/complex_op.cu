@@ -37,8 +37,6 @@ struct complex_op
 using cub_custom_op = nvbench::type_list<complex_op<128>>;
 using fp_value_types = nvbench::type_list<nvbench::float32_t>;
 
-// Sweep though various input iterators and patterns using cub::Max and
-// a small number of value_types.
 NVBENCH_BENCH_TYPES(reduce,
                     NVBENCH_TYPE_AXES(fp_value_types,
                                       cub_custom_op,

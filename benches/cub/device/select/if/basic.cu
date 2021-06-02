@@ -14,7 +14,8 @@ enum class select_op_type
   greater_than_middle,
   greater_than_zero,
   even
-  // complex
+  // complex predicate case is covered
+  // in the device/select/if/complex_predicate.cu
 };
 
 template <typename T>
@@ -48,9 +49,9 @@ template <>
 struct op_construction_helper<select_op_type::greater_than_middle>
 {
   template <typename T>
-  static gt_select_op<T> create_select_op(int elements)
+  static gt_select_op<T> create_select_op(T elements)
   {
-    return gt_select_op<T> (elements / 2);
+    return gt_select_op<T>{elements / 2};
   }
 };
 
@@ -60,7 +61,7 @@ struct op_construction_helper<select_op_type::greater_than_zero>
   template <typename T>
   static gt_select_op<T> create_select_op(int /* elements */)
   {
-    return gt_select_op<T> (0);
+    return gt_select_op<T>{T{}};
   }
 };
 
@@ -70,7 +71,7 @@ struct op_construction_helper<select_op_type::even>
   template <typename T>
   static even_select_op<T> create_select_op(int /* elements */)
   {
-    return even_select_op<T> ();
+    return even_select_op<T>{};
   }
 };
 
@@ -80,7 +81,7 @@ static void basic(nvbench::state &state,
                                      nvbench::enum_type<SelectOpType>,
                                      nvbench::enum_type<Pattern>>)
 {
-  const auto elements = static_cast<int>(state.get_int64("Elements"));
+  const auto elements = static_cast<std::size_t>(state.get_int64("Elements"));
 
   auto input =
     tbm::make_range_generator<T, tbm::iterator_style::pointer, Pattern>(
@@ -88,14 +89,14 @@ static void basic(nvbench::state &state,
 
   thrust::device_vector<T> output(elements);
   thrust::device_vector<T> num_selected(1);
-
-  state.add_element_count(elements);
-  state.add_global_memory_reads(elements);
-  state.add_global_memory_writes(elements);
+  thrust::host_vector<T> h_num_selected(1);
 
   auto select_op =
     op_construction_helper<SelectOpType>::template create_select_op<T>(
       elements);
+
+  auto selected_elements =
+    thrust::count_if(thrust::device, input.cbegin(), input.cend(), select_op);
 
   size_t tmp_size;
   cub::DeviceSelect::If(nullptr,
@@ -107,6 +108,10 @@ static void basic(nvbench::state &state,
                         select_op);
 
   thrust::device_vector<nvbench::uint8_t> tmp(tmp_size);
+
+  state.add_element_count(elements);
+  state.add_global_memory_reads(input.get_allocation_size());
+  state.add_global_memory_writes<T>(selected_elements);
 
   state.exec([&](nvbench::launch &launch) {
     std::size_t temp_size = tmp.size(); // need an lvalue
@@ -121,7 +126,7 @@ static void basic(nvbench::state &state,
 }
 
 // Column names for type axes:
-inline std::vector<std::string> histogram_type_axis_names()
+inline std::vector<std::string> select_if_type_axis_names()
 {
   return {"T", "Op", "Pattern"};
 }
@@ -172,5 +177,5 @@ using all_input_data_patterns =
 NVBENCH_BENCH_TYPES(basic,
                     NVBENCH_TYPE_AXES(types, ops, all_input_data_patterns))
   .set_name("cub::DeviceSelect::If")
-  .set_type_axes_names(histogram_type_axis_names())
+  .set_type_axes_names(select_if_type_axis_names())
   .add_int64_power_of_two_axis("Elements", nvbench::range(22, 28, 2));
