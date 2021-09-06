@@ -44,7 +44,7 @@ void by_key(nvbench::state &state, nvbench::type_list<T>)
 
   state.exec(nvbench::exec_tag::sync, [&](nvbench::launch &launch) {
     auto policy = thrust::device.on(launch.get_stream());
-    thrust::exclusive_scan_by_key(policy,
+    thrust::inclusive_scan_by_key(policy,
                                   keys.cbegin(),
                                   keys.cend(),
                                   in_values.begin(),
@@ -58,6 +58,6 @@ using types = nvbench::type_list<nvbench::int8_t,
                                  nvbench::float32_t,
                                  nvbench::float64_t>;
 NVBENCH_BENCH_TYPES(by_key, NVBENCH_TYPE_AXES(types))
-  .set_name("thrust::exclusive_scan_by_key")
+  .set_name("thrust::inclusive_scan_by_key")
   .add_int64_power_of_two_axis("Elements", nvbench::range(16, 30, 2))
   .add_string_axis("Pattern", {"single", "random"});
