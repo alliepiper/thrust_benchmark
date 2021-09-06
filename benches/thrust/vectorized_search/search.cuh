@@ -79,4 +79,7 @@ void search(nvbench::state &state,
   });
 }
 
-using types = nvbench::type_list<nvbench::uint32_t>;
+using types = nvbench::type_list<nvbench::uint8_t,
+                                 nvbench::uint16_t,
+                                 nvbench::uint32_t,
+                                 nvbench::uint64_t>;
