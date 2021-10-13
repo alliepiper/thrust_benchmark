@@ -1,6 +1,8 @@
 #include <nvbench/nvbench.cuh>
 
+#include <thrust/count.h>
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 #include <thrust/sequence.h>
 // Why is this in detail?
 #include <thrust/detail/raw_pointer_cast.h>
