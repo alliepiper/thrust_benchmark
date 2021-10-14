@@ -34,7 +34,7 @@ struct complex_op
   }
 };
 
-using cub_custom_op = nvbench::type_list<complex_op<128>>;
+using cub_custom_op = nvbench::type_list<complex_op<38>>;
 using fp_value_types = nvbench::type_list<nvbench::float32_t>;
 
 NVBENCH_BENCH_TYPES(reduce,
