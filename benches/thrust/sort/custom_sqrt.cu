@@ -73,7 +73,7 @@ void custom_sqrt(nvbench::state &state,
              });
 }
 using types = nvbench::type_list<nvbench::float32_t>;
-using ops = nvbench::enum_type_list<1,2,4,8,16>;
+using ops = nvbench::enum_type_list<4>;
 NVBENCH_BENCH_TYPES(custom_sqrt, NVBENCH_TYPE_AXES(types, ops))
   .set_name("thrust::sort<custom_sqrt> (random)")
   .add_int64_power_of_two_axis("Elements", nvbench::range(20, 30, 2));
