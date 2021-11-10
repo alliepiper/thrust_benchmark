@@ -42,7 +42,7 @@ void basic(nvbench::state &state, nvbench::type_list<T>)
   }
   else if (rng_engine == "taus88")
   {
-    do_engine(thrust::random::minstd_rand{});
+    do_engine(thrust::random::taus88{});
   }
 }
 using types = nvbench::type_list<nvbench::uint8_t,
