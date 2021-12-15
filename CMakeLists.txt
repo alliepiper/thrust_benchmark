@@ -12,6 +12,11 @@ CPMAddPackage(
   NAME fmt
   GITHUB_REPOSITORY fmtlib/fmt
   GIT_TAG 7.1.3
+  GIT_SHALLOW TRUE
+  OPTIONS
+    # Force static to keep fmt internal.
+    "BUILD_SHARED_LIBS OFF"
+    "CMAKE_POSITION_INDEPENDENT_CODE ON"
 )
 
 include(cmake/TbmUtilities.cmake)
