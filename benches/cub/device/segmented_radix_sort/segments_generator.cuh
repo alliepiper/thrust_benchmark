@@ -6,6 +6,7 @@
 #include <thrust/sequence.h>
 #include <thrust/random.h>
 #include <thrust/fill.h>
+#include <thrust/sort.h>
 
 #include <tbm/range_generator.cuh>
 

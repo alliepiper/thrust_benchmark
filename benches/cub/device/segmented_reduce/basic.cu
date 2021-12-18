@@ -1,9 +1,9 @@
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
-#include <thrust/transform.h>
-#include <thrust/sequence.h>
-#include <thrust/random.h>
 #include <thrust/fill.h>
+#include <thrust/random.h>
+#include <thrust/sort.h>
+#include <thrust/transform.h>
 
 #include <tbm/range_generator.cuh>
 
@@ -22,14 +22,13 @@ thrust::device_vector<nvbench::uint32_t> gen_offsets(int segment_size,
   return offsets;
 }
 
-
 template <typename T>
 struct SegmentSizeLimiter
 {
   T out_max;
 
   SegmentSizeLimiter(T out_max)
-    : out_max(out_max)
+      : out_max(out_max)
   {}
 
   __device__ T operator()(T in)
@@ -39,7 +38,6 @@ struct SegmentSizeLimiter
   }
 };
 
-
 thrust::device_vector<nvbench::uint32_t>
 gen_random(nvbench::uint32_t max_segment_size, int elements)
 {
@@ -47,8 +45,8 @@ gen_random(nvbench::uint32_t max_segment_size, int elements)
 
   auto random_input =
     tbm::make_range_generator<nvbench::uint32_t,
-      tbm::iterator_style::pointer,
-      tbm::data_pattern::random>(elements);
+                              tbm::iterator_style::pointer,
+                              tbm::data_pattern::random>(elements);
 
   thrust::transform(random_input.cbegin(),
                     random_input.cend(),
@@ -68,7 +66,6 @@ gen_random(nvbench::uint32_t max_segment_size, int elements)
   return offsets;
 }
 
-
 thrust::device_vector<nvbench::uint32_t> gen_offsets(const std::string &pattern,
                                                      int elements)
 {
@@ -84,10 +81,8 @@ thrust::device_vector<nvbench::uint32_t> gen_offsets(const std::string &pattern,
   return gen_random(16 * 1024, elements);
 }
 
-
 template <typename T>
-void basic(nvbench::state &state,
-           nvbench::type_list<T>)
+void basic(nvbench::state &state, nvbench::type_list<T>)
 {
   const int elements = static_cast<int>(state.get_int64("Elements"));
 

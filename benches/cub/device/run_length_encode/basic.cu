@@ -1,13 +1,30 @@
 #include <nvbench/nvbench.cuh>
 
 #include <thrust/device_vector.h>
+#include <thrust/transform.h>
 #include <thrust/sequence.h>
+#include <thrust/count.h>
 #include <thrust/random.h>
+#include <thrust/unique.h>
 #include <thrust/fill.h>
+#include <thrust/sort.h>
 
 #include <tbm/range_generator.cuh>
 
 #include <cub/device/device_run_length_encode.cuh>
+
+
+struct modulo_t
+{
+  std::size_t max_value {};
+
+  template <typename T>
+  __device__ T operator()(const T& val)
+  {
+    return val % static_cast<T>(max_value);
+  }
+};
+
 
 template <typename T>
 void basic(nvbench::state &state,
@@ -36,9 +53,11 @@ void basic(nvbench::state &state,
                                 tbm::iterator_style::pointer,
                                 tbm::data_pattern::random>(elements);
 
-    thrust::copy(random_input.cbegin(),
-                 random_input.cend(),
-                 input.begin());
+    // Modulo helps to reduce number of trivial runs
+    thrust::transform(random_input.cbegin(),
+                      random_input.cend(),
+                      input.begin(),
+                      modulo_t{elements / 2});
     thrust::sort(input.begin(), input.end());
   }
 
@@ -92,4 +111,4 @@ using types = nvbench::type_list<nvbench::int8_t,
 NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(types))
   .set_name("cub::DeviceRunLengthEncode::Encode")
   .add_int64_power_of_two_axis("Elements", nvbench::range(20, 30, 2))
-  .add_string_axis("Pattern", {"const", "sequence", "random"});
+  .add_string_axis("Pattern", {"random"});

@@ -1,24 +1,17 @@
-#include <nvbench/nvbench.cuh>
-
 #include "segments_generator.cuh"
+#include "type_lists.cuh"
+
+#include <nvbench/nvbench.cuh>
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
-#include <thrust/transform.h>
-#include <thrust/sequence.h>
 #include <thrust/random.h>
-#include <thrust/fill.h>
-
-#include <tbm/range_generator.cuh>
-
-#include "type_lists.cuh"
-#include "type_traits"
 
 #include <cub/device/device_segmented_radix_sort.cuh>
 
+#include <type_traits>
 
-template <typename T,
-          sort_direction SortDirection>
+template <typename T, sort_direction SortDirection>
 void basic(nvbench::state &state,
            nvbench::type_list<T, nvbench::enum_type<SortDirection>>)
 {
@@ -39,12 +32,12 @@ void basic(nvbench::state &state,
 
   const int num_segments = static_cast<int>(offsets.size() - 1);
 
-  const T *d_input = thrust::raw_pointer_cast(input.data());
-  T *d_output = thrust::raw_pointer_cast(output.data());
+  const T *d_input                   = thrust::raw_pointer_cast(input.data());
+  T *d_output                        = thrust::raw_pointer_cast(output.data());
   const nvbench::uint32_t *d_offsets = thrust::raw_pointer_cast(offsets.data());
 
-  std::size_t temp_storage_bytes {};
-  if constexpr(SortDirection == sort_direction::ascending)
+  std::size_t temp_storage_bytes{};
+  if constexpr (SortDirection == sort_direction::ascending)
   {
     cub::DeviceSegmentedRadixSort::SortKeys(nullptr,
                                             temp_storage_bytes,
@@ -81,7 +74,7 @@ void basic(nvbench::state &state,
   state.add_global_memory_writes<T>(elements);
 
   state.exec([&](nvbench::launch &launch) {
-    if constexpr(SortDirection == sort_direction::ascending)
+    if constexpr (SortDirection == sort_direction::ascending)
     {
       cub::DeviceSegmentedRadixSort::SortKeys(d_temp_storage,
                                               temp_storage_bytes,
