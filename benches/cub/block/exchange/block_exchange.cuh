@@ -109,7 +109,7 @@ static void bench(nvbench::state &state,
   state.add_global_memory_reads<T>(elements);
 
   thrust::device_vector<T> input(elements);
-  thrust::fill_n(input.begin(), elements, T());
+  const T *d_input = thrust::raw_pointer_cast(input.data());
 
   state.exec([&](nvbench::launch &launch) {
     /**
@@ -125,20 +125,17 @@ static void bench(nvbench::state &state,
     if constexpr(compute_mode::reference == ComputeMode)
     {
       kernel_reference<T, ItemsPerThread>
-        <<<elements, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
-                                       output);
+        <<<elements, ThreadsInBlock>>>(d_input, output);
     }
     else if constexpr(compute_mode::exchange == ComputeMode)
     {
       kernel<T, OperationType, ThreadsInBlock, ItemsPerThread, false>
-        <<<elements, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
-                                       output);
+        <<<elements, ThreadsInBlock>>>(d_input, output);
     }
     else if constexpr(compute_mode::exchange_warp_time_slicing == ComputeMode)
     {
       kernel<T, OperationType, ThreadsInBlock, ItemsPerThread, true>
-        <<<elements, ThreadsInBlock>>>(thrust::raw_pointer_cast(input.data()),
-                                       output);
+        <<<elements, ThreadsInBlock>>>(d_input, output);
     }
   });
 }

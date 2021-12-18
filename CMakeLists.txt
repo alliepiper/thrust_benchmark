@@ -1,6 +1,9 @@
 # 3.18.3 fixed bugs in MSVC + CUDA + C++17 support
 cmake_minimum_required(VERSION 3.18.3)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 17)
+
 # CXX needed for fmt
 project(thrust_benchmark CXX CUDA)
 
