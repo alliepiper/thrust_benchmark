@@ -1,6 +1,8 @@
 #include <nvbench/nvbench.cuh>
 
+#include <thrust/count.h>
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 #include <thrust/copy.h>
 
 template <typename T>

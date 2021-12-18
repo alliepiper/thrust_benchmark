@@ -5,6 +5,7 @@
 #include <thrust/set_operations.h>
 #include <thrust/device_vector.h>
 #include <thrust/sequence.h>
+#include <thrust/sort.h>
 
 #include <tbm/range_generator.cuh>
 

@@ -1,7 +1,9 @@
 #include <nvbench/nvbench.cuh>
 
-#include <thrust/device_vector.h>
+#include <thrust/count.h>
 #include <thrust/copy.h>
+#include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 
 #include <tbm/range_generator.cuh>
 
@@ -13,6 +15,37 @@ enum class select_op_type
   // complex predicate case is covered
   // in the thrust/partition/complex_predicate.cu
 };
+
+NVBENCH_DECLARE_ENUM_TYPE_STRINGS(
+  select_op_type,
+  [](select_op_type select_op) {
+    switch (select_op)
+    {
+      case select_op_type::greater_than_middle:
+        return "Mid";
+      case select_op_type::greater_than_zero:
+        return "Zero";
+      case select_op_type::even:
+        return "Even";
+      default:
+        break;
+    }
+    NVBENCH_THROW(std::runtime_error, "{}", "Unknown data_pattern");
+  },
+  [](select_op_type select_op) {
+    switch (select_op)
+    {
+      case select_op_type::greater_than_middle:
+        return "Return true for elements > Elements/2";
+      case select_op_type::greater_than_zero:
+        return "Return true for all elements";
+      case select_op_type::even:
+        return "Return true for even elements";
+      default:
+        break;
+    }
+    NVBENCH_THROW(std::runtime_error, "{}", "Unknown data_pattern");
+  })
 
 template <typename T>
 struct gt_select_op
@@ -121,37 +154,6 @@ using types = nvbench::type_list<nvbench::uint8_t,
 using ops = nvbench::enum_type_list<select_op_type::greater_than_middle,
                                     select_op_type::greater_than_zero,
                                     select_op_type::even>;
-
-NVBENCH_DECLARE_ENUM_TYPE_STRINGS(
-  select_op_type,
-  [](select_op_type select_op) {
-    switch (select_op)
-    {
-      case select_op_type::greater_than_middle:
-        return "Mid";
-      case select_op_type::greater_than_zero:
-        return "Zero";
-      case select_op_type::even:
-        return "Even";
-      default:
-        break;
-    }
-    NVBENCH_THROW(std::runtime_error, "{}", "Unknown data_pattern");
-  },
-  [](select_op_type select_op) {
-    switch (select_op)
-    {
-      case select_op_type::greater_than_middle:
-        return "Return true for elements > Elements/2";
-      case select_op_type::greater_than_zero:
-        return "Return true for all elements";
-      case select_op_type::even:
-        return "Return true for even elements";
-      default:
-        break;
-    }
-    NVBENCH_THROW(std::runtime_error, "{}", "Unknown data_pattern");
-  })
 
 using all_input_data_patterns =
   nvbench::enum_type_list<tbm::data_pattern::sequence,

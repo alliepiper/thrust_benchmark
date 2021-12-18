@@ -1,6 +1,7 @@
 #include <nvbench/nvbench.cuh>
 
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 #include <thrust/fill.h>
 
 // This benchmark can be also considered as parallel_for benchmark

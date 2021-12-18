@@ -2,9 +2,11 @@
 
 #include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 #include <thrust/random.h>
 #include <thrust/sequence.h>
 #include <thrust/shuffle.h>
+#include <thrust/sort.h>
 
 #include <tbm/range_generator.cuh>
 

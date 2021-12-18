@@ -2,6 +2,7 @@
 
 #include <thrust/adjacent_difference.h>
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 
 template <typename T>
 static void basic(nvbench::state &state, nvbench::type_list<T>)

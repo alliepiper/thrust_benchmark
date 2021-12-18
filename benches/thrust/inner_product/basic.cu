@@ -1,7 +1,9 @@
 #include <nvbench/nvbench.cuh>
 
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 #include <thrust/inner_product.h>
+#include <thrust/sort.h>
 
 template <typename T>
 static void basic(nvbench::state &state,

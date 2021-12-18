@@ -2,13 +2,14 @@
 
 #include <thrust/device_vector.h>
 #include <thrust/unique.h>
+#include <thrust/sort.h>
 #include <thrust/reduce.h>
 #include <thrust/sequence.h>
 
 #include <tbm/range_generator.cuh>
 
 template <typename T>
-thrust::device_vector<T> gen_keys(thrust::device_vector<T> keys)
+void gen_keys(thrust::device_vector<T> &keys)
 {
   std::size_t elements = keys.size();
 
@@ -19,7 +20,6 @@ thrust::device_vector<T> gen_keys(thrust::device_vector<T> keys)
 
   thrust::copy(random_input.cbegin(), random_input.cend(), keys.begin());
   thrust::sort(keys.begin(), keys.end());
-  return keys;
 }
 
 template <typename T>

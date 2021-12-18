@@ -3,6 +3,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/random.h>
 #include <thrust/sequence.h>
+#include <thrust/sort.h>
 #include <thrust/merge.h>
 
 #include <tbm/range_generator.cuh>
