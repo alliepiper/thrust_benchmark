@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 
 # CXX needed for fmt
-project(thrust_benchmark CXX CUDA)
+project(TBM CXX CUDA)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 
@@ -35,6 +35,8 @@ find_package(Thrust REQUIRED CONFIG)
 # TODO Other device systems:
 thrust_create_target(ThrustCUDA)
 set(THRUST_TARGETS ThrustCUDA)
+
+enable_testing()
 
 add_subdirectory(nvbench)
 add_subdirectory(benches)
