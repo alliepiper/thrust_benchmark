@@ -15,6 +15,14 @@ cmake ../thrust_benchmark \
 
 # Compile
 make
+
+# Lock gpu clocks, enable CUPTI permissions, etc
+
+# Run benchmarks
+ctest -L "bench"
+
+# View results
+ls results/
 ```
 
 This will build all benchmarks executables, which are named
