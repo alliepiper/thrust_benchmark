@@ -34,6 +34,4 @@ NVBENCH_BENCH_TYPES(mixed_types,
                     NVBENCH_TYPE_AXES(value_types, value_types, value_types))
   .set_name("thrust::exclusive_scan (mixed types)")
   .set_type_axes_names({"In", "Out", "Init"})
-  .add_int64_power_of_two_axis("Size", nvbench::range(20, 30, 4))
-  .set_timeout(2)
-  .set_skip_time(100e-6 /* us */);
+  .add_int64_power_of_two_axis("Size", nvbench::range(20, 30, 4));

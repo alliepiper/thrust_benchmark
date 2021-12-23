@@ -26,6 +26,4 @@ static void in_place(nvbench::state &state, nvbench::type_list<T>)
 }
 using types = nvbench::type_list<int, float, double>;
 NVBENCH_BENCH_TYPES(in_place, NVBENCH_TYPE_AXES(types))
-  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 30, 2))
-  .set_timeout(2)
-  .set_skip_time(100e-6 /* us */);
+  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 30, 2));

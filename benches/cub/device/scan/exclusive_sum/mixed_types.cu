@@ -49,6 +49,4 @@ void mixed_types(nvbench::state &state, nvbench::type_list<T, T>)
 NVBENCH_BENCH_TYPES(mixed_types, NVBENCH_TYPE_AXES(value_types, value_types))
   .set_name("cub::DeviceScan::ExclusiveSum (mixed types)")
   .set_type_axes_names({"In", "Out"})
-  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 30, 2))
-  .set_timeout(2)
-  .set_skip_time(100e-6 /* us */);
+  .add_int64_power_of_two_axis("Elements", nvbench::range(16, 30, 2));
