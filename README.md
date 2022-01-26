@@ -18,13 +18,13 @@ make
 
 # Lock gpu clocks, enable CUPTI permissions, etc
 # For example, on Linux and Volta+:
-# sudo nvbench-ctl --pm 1 --lgc base
+# sudo bin/nvbench-ctl --pm 1 --lgc base
 
 # Run benchmarks
 ctest -L "bench"
 
 # Reset locked GPU clocks. Example:
-# sudo nvbench-ctl --pm 0 --lgc reset
+# sudo bin/nvbench-ctl --pm 0 --lgc reset
 
 # View results
 ls results/
