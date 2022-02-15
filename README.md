@@ -10,7 +10,15 @@ git clone --recursive https://github.com/allisonvacanti/thrust_benchmark
 # Configure build
 mkdir thrust_benchmark_build
 cd thrust_benchmark_build
+# See https://cmake.org/cmake/help/latest/prop_tgt/CUDA_ARCHITECTURES.html
+# for info on setting CMAKE_CUDA_ARCHITECTURES. tl;dr, this is a
+# semicolon-separated list of SM architectures to generate PTX/SASS for.
+# Example: `-DCMAKE_CUDA_ARCHITECTURES="60-virtual;61-real;70"` will produce:
+# - PTX for sm_60
+# - SASS for sm_61
+# - both PTX and SAS for sm_70
 cmake ../thrust_benchmark \
+      -DCMAKE_CUDA_ARCHITECTURES=<Target arches here!> \
       -DThrust_DIR=../thrust/thrust/cmake
 
 # Compile -- builds NVBench and the bin/bench.* executables
