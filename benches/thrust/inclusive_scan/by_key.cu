@@ -39,24 +39,21 @@ void by_key(nvbench::state &state, nvbench::type_list<T>)
   }
 
   state.add_element_count(elements);
-  state.add_global_memory_reads<T>(elements);
-  state.add_global_memory_writes<T>(elements);
+  state.collect_cupti_metrics();
 
   state.exec(nvbench::exec_tag::sync, [&](nvbench::launch &launch) {
     auto policy = thrust::device.on(launch.get_stream());
     thrust::inclusive_scan_by_key(policy,
                                   keys.cbegin(),
                                   keys.cend(),
-                                  in_values.begin(),
+                                  in_values.cbegin(),
                                   out_values.begin());
   });
 }
 using types = nvbench::type_list<nvbench::int8_t,
                                  nvbench::int16_t,
                                  nvbench::int32_t,
-                                 nvbench::int64_t,
-                                 nvbench::float32_t,
-                                 nvbench::float64_t>;
+                                 nvbench::int64_t>;
 NVBENCH_BENCH_TYPES(by_key, NVBENCH_TYPE_AXES(types))
   .set_name("thrust::inclusive_scan_by_key")
   .add_int64_power_of_two_axis("Elements", nvbench::range(16, 30, 2))
