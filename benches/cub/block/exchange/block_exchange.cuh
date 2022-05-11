@@ -72,6 +72,25 @@ __global__ void kernel(const T *input, int *output)
 
   __shared__ typename BlockExchange::TempStorage temp_storage;
 
+  // Initialize the shared memory to 0.
+  //
+  // This isn't normally needed, but otherwise we'll see invalid memory accesses
+  // in `do_not_optimize` as a result of the conditional exchanges in
+  // `scatter_to_striped_guarded` and `scatter_to_striped_flagged`. The items
+  // where `rank[i] == -1` (guarded) or `is_valid[i] == false` (flagged) will
+  // copy the contents of (uninitialized) shared memory into `thread_data`.
+  //
+  // Since `do_not_optimize` expects all elements of `thread_data` to be 0,
+  // this will cause the intentionally-unreachable `output[linear_id] = count`
+  // branch to be taken. `output` is always a nullptr, thus the invalid write.
+  //
+  // By explicitly zeroing out temp_storage, we can avoid this issue.
+  if (threadIdx.x == 0)
+  {
+    memset(&temp_storage, 0, sizeof(temp_storage));
+  }
+  __syncthreads();
+
   BlockExchange exchange(temp_storage);
   OperationType()(exchange, thread_data);
 
