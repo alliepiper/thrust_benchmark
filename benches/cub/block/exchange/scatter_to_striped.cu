@@ -3,8 +3,8 @@
 struct scatter_to_striped
 {
   template <typename BlockExchange, typename T, int ItemsPerThread>
-  __device__ void operator()(BlockExchange &block_exchange,
-                             T (&thread_data)[ItemsPerThread])
+  __device__ int operator()(BlockExchange &block_exchange,
+                            T (&thread_data)[ItemsPerThread])
   {
     int ranks[ItemsPerThread];
 
@@ -16,6 +16,8 @@ struct scatter_to_striped
     }
 
     block_exchange.ScatterToStriped(thread_data, thread_data, ranks);
+
+    return 0; // All items have defined values
   }
 };
 

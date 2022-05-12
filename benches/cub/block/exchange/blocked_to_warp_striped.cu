@@ -3,10 +3,11 @@
 struct blocked_to_warp_striped
 {
   template <typename BlockExchange, typename T, int ItemsPerThread>
-  __device__ void operator()(BlockExchange &block_exchange,
-                             T (&thread_data)[ItemsPerThread])
+  __device__ int operator()(BlockExchange &block_exchange,
+                            T (&thread_data)[ItemsPerThread])
   {
     block_exchange.BlockedToWarpStriped(thread_data, thread_data);
+    return 0; // All items have defined values
   }
 };
 

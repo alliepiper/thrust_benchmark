@@ -122,12 +122,12 @@ static void bench(nvbench::state &state,
     if (reference_mode)
     {
       kernel_reference<T, ItemsPerThread>
-        <<<blocks_in_grid, ThreadsInBlock>>>(output);
+        <<<blocks_in_grid, ThreadsInBlock, 0, launch.get_stream()>>>(output);
     }
     else
     {
       kernel<T, OperationType, ThreadsInBlock, ItemsPerThread>
-        <<<blocks_in_grid, ThreadsInBlock>>>(output);
+        <<<blocks_in_grid, ThreadsInBlock, 0, launch.get_stream()>>>(output);
     }
   });
 }

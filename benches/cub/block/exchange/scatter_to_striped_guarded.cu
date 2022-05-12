@@ -3,8 +3,8 @@
 struct scatter_to_striped
 {
   template <typename BlockExchange, typename T, int ItemsPerThread>
-  __device__ void operator()(BlockExchange &block_exchange,
-                             T (&thread_data)[ItemsPerThread])
+  __device__ int operator()(BlockExchange &block_exchange,
+                            T (&thread_data)[ItemsPerThread])
   {
     int ranks[ItemsPerThread];
 
@@ -21,6 +21,9 @@ struct scatter_to_striped
     block_exchange.ScatterToStripedGuarded(thread_data,
                                            thread_data,
                                            ranks);
+
+    // Half of the items have undefined values and may exceed the limit
+    return ItemsPerThread * static_cast<int>(blockDim.x) / 2;
   }
 };
 
