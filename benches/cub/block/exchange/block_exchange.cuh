@@ -26,7 +26,8 @@ __device__ void fill_thread_data(const T *input,
 template <typename T, int ItemsPerThread>
 __device__ void do_not_optimize(int *output,
                                 T (&thread_data)[ItemsPerThread],
-                                const unsigned int linear_id)
+                                const unsigned int linear_id,
+                                const int exceeding_limit)
 {
   int count = 0;
   for (int i = 0; i < ItemsPerThread; i++)
@@ -37,7 +38,10 @@ __device__ void do_not_optimize(int *output,
     }
   }
 
-  if (count)
+  // Some methods (like ScatterToStripedGuarded) leave thread data in 
+  // undefined state. To address this issue, we allow certain amount of
+  // check violations
+  if (count > exceeding_limit)
   {
     output[linear_id] = count;
   }
@@ -51,8 +55,10 @@ __global__ void kernel_reference(const T *input, int *output)
   const unsigned int linear_id = threadIdx.x + blockIdx.x * blockDim.x;
   T thread_data[ItemsPerThread];
 
+  // There should be no item greater than `42`
+  const int exceeding_limit = 0;
   fill_thread_data(input, thread_data, linear_id);
-  do_not_optimize(output, thread_data, linear_id);
+  do_not_optimize(output, thread_data, linear_id, exceeding_limit);
 }
 
 template <typename T,
@@ -73,9 +79,9 @@ __global__ void kernel(const T *input, int *output)
   __shared__ typename BlockExchange::TempStorage temp_storage;
 
   BlockExchange exchange(temp_storage);
-  OperationType()(exchange, thread_data);
+  const int exceeding_limit = OperationType()(exchange, thread_data);
 
-  do_not_optimize(output, thread_data, linear_id);
+  do_not_optimize(output, thread_data, linear_id, exceeding_limit);
 }
 
 enum class compute_mode
@@ -122,20 +128,20 @@ static void bench(nvbench::state &state,
      */
     int *output = nullptr;
 
-    if constexpr(compute_mode::reference == ComputeMode)
+    if constexpr (compute_mode::reference == ComputeMode)
     {
       kernel_reference<T, ItemsPerThread>
-        <<<elements, ThreadsInBlock>>>(d_input, output);
+        <<<elements, ThreadsInBlock, 0, launch.get_stream()>>>(d_input, output);
     }
-    else if constexpr(compute_mode::exchange == ComputeMode)
+    else if constexpr (compute_mode::exchange == ComputeMode)
     {
       kernel<T, OperationType, ThreadsInBlock, ItemsPerThread, false>
-        <<<elements, ThreadsInBlock>>>(d_input, output);
+        <<<elements, ThreadsInBlock, 0, launch.get_stream()>>>(d_input, output);
     }
-    else if constexpr(compute_mode::exchange_warp_time_slicing == ComputeMode)
+    else if constexpr (compute_mode::exchange_warp_time_slicing == ComputeMode)
     {
       kernel<T, OperationType, ThreadsInBlock, ItemsPerThread, true>
-        <<<elements, ThreadsInBlock>>>(d_input, output);
+        <<<elements, ThreadsInBlock, 0, launch.get_stream()>>>(d_input, output);
     }
   });
 }
