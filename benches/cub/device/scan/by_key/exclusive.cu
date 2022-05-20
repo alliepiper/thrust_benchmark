@@ -76,6 +76,6 @@ using types = nvbench::type_list<nvbench::int8_t,
                                  nvbench::int32_t,
                                  nvbench::int64_t>;
 NVBENCH_BENCH_TYPES(by_key, NVBENCH_TYPE_AXES(types))
-  .set_name("cub::DeviceScane::ExclusiveSumByKey")
+  .set_name("cub::DeviceScan::ExclusiveSumByKey")
   .add_int64_power_of_two_axis("Elements", nvbench::range(16, 28, 2))
   .add_string_axis("Pattern", {"single", "random"});
