@@ -17,10 +17,10 @@
 
 enum class BufferOrder
 {
-  // Random offsets into a data segment
+  // Buffers are randomly shuffled within memory
   RANDOM,
 
-  // Buffers cohesively reside next to each other
+  // Buffer N+1 resides next to buffer N
   CONSECUTIVE
 };
 
@@ -54,11 +54,11 @@ void GenerateRandomData(
   typename std::enable_if<std::is_integral<T>::value && (sizeof(T) >= 2)>::type
     * = nullptr)
 {
-  // initialize random number generator
+  // Initialize random number generator
   std::mt19937 rng(seed);
   std::uniform_int_distribution<T> uni_dist(min_rand_val, max_rand_val);
 
-  // generate random numbers
+  // Generate random numbers
   for (std::size_t i = 0; i < num_items; ++i)
   {
     rand_out[i] = uni_dist(rng);
@@ -285,7 +285,7 @@ static void basic(nvbench::state &state,
                                launch.get_stream());
   });
 
-// Generate golden sample on CPU and verify algorithm correctness
+// Optionally generate golden sample on CPU and verify algorithm correctness
 #ifdef BM_CHECK_RESULTS
   std::vector<uint8_t> h_out(num_total_bytes);
   thrust::host_vector<uint8_t> h_gpu_results = d_out_buffer;
@@ -353,6 +353,6 @@ NVBENCH_DECLARE_ENUM_TYPE_STRINGS(
 NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(atomic_type, buffer_order))
   .set_name("cub::DeviceMemcpy::Batched")
   .set_type_axes_names(type_axis_names())
-  .add_int64_axis("Min. buffer size", {1})
-  .add_int64_axis("Max. buffer size", {4, 32, 256, 1024, 64 * 1024})
-  .add_int64_power_of_two_axis("Elements", nvbench::range(20, 30, 2));
+  .add_int64_axis("Min. buffer size", {1, 64 * 1024})
+  .add_int64_axis("Max. buffer size", {8, 64, 256, 1024, 64 * 1024})
+  .add_int64_power_of_two_axis("Elements", nvbench::range(25, 29, 2));
