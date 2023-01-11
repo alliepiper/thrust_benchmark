@@ -287,31 +287,6 @@ static void basic(nvbench::state &state,
                                num_buffers,
                                launch.get_stream());
   });
-
-// Optionally generate golden sample on CPU and verify algorithm correctness
-#ifdef BM_CHECK_RESULTS
-  std::vector<uint8_t> h_out(num_total_bytes);
-  thrust::host_vector<uint8_t> h_gpu_results = d_out_buffer;
-
-  // CPU-side result generation for verification
-  for (BufferOffsetT i = 0; i < num_buffers; i++)
-  {
-    std::memcpy(h_out.data() + h_buffer_dst_offsets[i],
-                h_in.data() + h_buffer_src_offsets[i],
-                h_buffer_sizes[i]);
-  }
-
-  for (ByteOffsetT i = 0; i < num_total_bytes; i++)
-  {
-    if (h_gpu_results[i] != h_out[i])
-    {
-      std::cout << "Mismatch at index " << i
-                << ", CPU vs. GPU: " << static_cast<uint16_t>(h_gpu_results[i])
-                << ", " << static_cast<uint16_t>(h_out[i]) << "\n";
-      exit(-1);
-    }
-  }
-#endif
 }
 
 // Column names for type axes:
