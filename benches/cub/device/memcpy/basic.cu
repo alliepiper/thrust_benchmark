@@ -15,7 +15,10 @@
 #include <random>
 #include <stdexcept>
 
-enum class BufferOrder
+/**
+ * @brief Enum class with options for generating the buffer order within memory
+ */
+enum class buffer_order
 {
   // Buffers are randomly shuffled within memory
   RANDOM,
@@ -31,7 +34,7 @@ enum class BufferOrder
  * @tparam IteratorT The random-access iterator type to be returned
  */
 template <typename IteratorT>
-struct OffsetToPtrOp
+struct offset_to_ptr_op
 {
   template <typename T>
   __host__ __device__ __forceinline__ IteratorT operator()(T offset) const
@@ -45,7 +48,7 @@ struct OffsetToPtrOp
  * @brief Host-side random data generation
  */
 template <typename T>
-void GenerateRandomData(
+void generate_random_data(
   T *rand_out,
   const std::size_t num_items,
   const T min_rand_val          = std::numeric_limits<T>::min(),
@@ -71,8 +74,8 @@ void GenerateRandomData(
  */
 template <typename BufferOffsetT, typename ByteOffsetT, typename BufferSizeT>
 std::vector<ByteOffsetT>
-GetShuffledBufferOffsets(const std::vector<BufferSizeT> &buffer_sizes,
-                         const std::uint_fast32_t seed = 320981U)
+get_shuffled_buffer_offsets(const std::vector<BufferSizeT> &buffer_sizes,
+                            const std::uint_fast32_t seed = 320981U)
 {
   BufferOffsetT num_buffers = static_cast<BufferOffsetT>(buffer_sizes.size());
 
@@ -108,7 +111,7 @@ GetShuffledBufferOffsets(const std::vector<BufferSizeT> &buffer_sizes,
   return new_offsets;
 }
 
-template <typename AtomicT, BufferOrder buffer_order>
+template <typename AtomicT, buffer_order buffer_order>
 static void basic(nvbench::state &state,
                   nvbench::type_list<AtomicT, nvbench::enum_type<buffer_order>>)
 {
@@ -151,10 +154,10 @@ static void basic(nvbench::state &state,
   std::vector<ByteOffsetT> h_buffer_dst_offsets(num_buffers);
 
   // Generate the buffer sizes
-  GenerateRandomData(h_buffer_sizes.data(),
-                     h_buffer_sizes.size(),
-                     static_cast<BufferSizeT>(min_buffer_size),
-                     static_cast<BufferSizeT>(max_buffer_size));
+  generate_random_data(h_buffer_sizes.data(),
+                       h_buffer_sizes.size(),
+                       static_cast<BufferSizeT>(min_buffer_size),
+                       static_cast<BufferSizeT>(max_buffer_size));
 
   // Make sure buffer sizes are a multiple of the most granular unit (one
   // AtomicT) being copied (round down)
@@ -167,11 +170,11 @@ static void basic(nvbench::state &state,
   ByteOffsetT num_total_bytes = 0;
   for (BufferOffsetT i = 0; i < num_buffers; i++)
   {
-    if (input_gen == BufferOrder::CONSECUTIVE)
+    if (input_gen == buffer_order::CONSECUTIVE)
     {
       h_buffer_src_offsets[i] = num_total_bytes;
     }
-    if (output_gen == BufferOrder::CONSECUTIVE)
+    if (output_gen == buffer_order::CONSECUTIVE)
     {
       h_buffer_dst_offsets[i] = num_total_bytes;
     }
@@ -180,20 +183,20 @@ static void basic(nvbench::state &state,
 
   // Shuffle input buffer source-offsets
   std::uint_fast32_t shuffle_seed = 320981U;
-  if (input_gen == BufferOrder::RANDOM)
+  if (input_gen == buffer_order::RANDOM)
   {
     h_buffer_src_offsets =
-      GetShuffledBufferOffsets<BufferOffsetT, ByteOffsetT>(h_buffer_sizes,
-                                                           shuffle_seed);
+      get_shuffled_buffer_offsets<BufferOffsetT, ByteOffsetT>(h_buffer_sizes,
+                                                              shuffle_seed);
     shuffle_seed += 42;
   }
 
   // Shuffle input buffer source-offsets
-  if (output_gen == BufferOrder::RANDOM)
+  if (output_gen == buffer_order::RANDOM)
   {
     h_buffer_dst_offsets =
-      GetShuffledBufferOffsets<BufferOffsetT, ByteOffsetT>(h_buffer_sizes,
-                                                           shuffle_seed);
+      get_shuffled_buffer_offsets<BufferOffsetT, ByteOffsetT>(h_buffer_sizes,
+                                                              shuffle_seed);
   }
 
   // Get temporary storage requirements
@@ -242,12 +245,12 @@ static void basic(nvbench::state &state,
   using RandomInitAliasT         = uint16_t;
   std::size_t num_aliased_factor = sizeof(RandomInitAliasT) / sizeof(uint8_t);
   std::size_t num_aliased_units  = CUB_QUOTIENT_CEILING(num_total_bytes,
-                                                       num_aliased_factor);
+                                                        num_aliased_factor);
   std::vector<uint8_t> h_in(num_aliased_units * num_aliased_factor);
 
   // Generate random-bits data buffer
-  GenerateRandomData(reinterpret_cast<RandomInitAliasT *>(h_in.data()),
-                     num_aliased_units);
+  generate_random_data(reinterpret_cast<RandomInitAliasT *>(h_in.data()),
+                       num_aliased_units);
 
   // Prepare random data segment (which serves for the buffer sources)
   thrust::device_vector<uint8_t> d_in_buffer = h_in;
@@ -263,14 +266,14 @@ static void basic(nvbench::state &state,
   thrust::device_vector<BufferSizeT> d_buffer_sizes = h_buffer_sizes;
 
   // Prepare d_buffer_srcs
-  OffsetToPtrOp<SrcPtrT> src_transform_op{static_cast<SrcPtrT>(d_in)};
-  cub::TransformInputIterator<SrcPtrT, OffsetToPtrOp<SrcPtrT>, ByteOffsetT *>
+  offset_to_ptr_op<SrcPtrT> src_transform_op{static_cast<SrcPtrT>(d_in)};
+  cub::TransformInputIterator<SrcPtrT, offset_to_ptr_op<SrcPtrT>, ByteOffsetT *>
     d_buffer_srcs(thrust::raw_pointer_cast(d_buffer_src_offsets.data()),
                   src_transform_op);
 
   // Prepare d_buffer_dsts
-  OffsetToPtrOp<SrcPtrT> dst_transform_op{static_cast<SrcPtrT>(d_out)};
-  cub::TransformInputIterator<SrcPtrT, OffsetToPtrOp<SrcPtrT>, ByteOffsetT *>
+  offset_to_ptr_op<SrcPtrT> dst_transform_op{static_cast<SrcPtrT>(d_out)};
+  cub::TransformInputIterator<SrcPtrT, offset_to_ptr_op<SrcPtrT>, ByteOffsetT *>
     d_buffer_dsts(thrust::raw_pointer_cast(d_buffer_dst_offsets.data()),
                   dst_transform_op);
 
@@ -320,29 +323,29 @@ inline std::vector<std::string> type_axis_names()
 // Benchmark for unaligned buffers and buffers aligned to four bytes
 using atomic_type = nvbench::type_list<nvbench::uint8_t, nvbench::uint32_t>;
 
-using buffer_order =
-  nvbench::enum_type_list<BufferOrder::RANDOM, BufferOrder::CONSECUTIVE>;
+using buffer_orders =
+  nvbench::enum_type_list<buffer_order::RANDOM, buffer_order::CONSECUTIVE>;
 
 NVBENCH_DECLARE_ENUM_TYPE_STRINGS(
-  BufferOrder,
-  [](BufferOrder data_gen_mode) {
+  buffer_order,
+  [](buffer_order data_gen_mode) {
     switch (data_gen_mode)
     {
-      case BufferOrder::RANDOM:
+      case buffer_order::RANDOM:
         return "Random";
-      case BufferOrder::CONSECUTIVE:
+      case buffer_order::CONSECUTIVE:
         return "Consecutive";
       default:
         break;
     }
     NVBENCH_THROW(std::runtime_error, "{}", "Unknown data_pattern");
   },
-  [](BufferOrder data_gen_mode) {
+  [](buffer_order data_gen_mode) {
     switch (data_gen_mode)
     {
-      case BufferOrder::RANDOM:
+      case buffer_order::RANDOM:
         return "Buffers are randomly shuffled within memory";
-      case BufferOrder::CONSECUTIVE:
+      case buffer_order::CONSECUTIVE:
         return "Consecutive buffers reside cohesively in memory";
       default:
         break;
@@ -350,7 +353,7 @@ NVBENCH_DECLARE_ENUM_TYPE_STRINGS(
     NVBENCH_THROW(std::runtime_error, "{}", "Unknown data_pattern");
   })
 
-NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(atomic_type, buffer_order))
+NVBENCH_BENCH_TYPES(basic, NVBENCH_TYPE_AXES(atomic_type, buffer_orders))
   .set_name("cub::DeviceMemcpy::Batched")
   .set_type_axes_names(type_axis_names())
   .add_int64_axis("Min. buffer size", {1, 64 * 1024})
