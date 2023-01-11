@@ -241,20 +241,16 @@ static void basic(nvbench::state &state,
   // Add benchmark writes
   state.add_global_memory_writes<char>(num_total_bytes, "data");
 
-  // Populate the data source with random data
-  using RandomInitAliasT         = uint16_t;
-  std::size_t num_aliased_factor = sizeof(RandomInitAliasT) / sizeof(uint8_t);
-  std::size_t num_aliased_units  = CUB_QUOTIENT_CEILING(num_total_bytes,
-                                                        num_aliased_factor);
-  std::vector<uint8_t> h_in(num_aliased_units * num_aliased_factor);
-
-  // Generate random-bits data buffer
-  generate_random_data(reinterpret_cast<RandomInitAliasT *>(h_in.data()),
-                       num_aliased_units);
-
   // Prepare random data segment (which serves for the buffer sources)
-  thrust::device_vector<uint8_t> d_in_buffer = h_in;
+  thrust::device_vector<uint8_t> d_in_buffer(num_total_bytes);
   thrust::device_vector<uint8_t> d_out_buffer(num_total_bytes);
+
+  // Populate the data source buffer
+  thrust::fill(std::begin(d_in_buffer),
+               std::end(d_in_buffer),
+               std::numeric_limits<uint8_t>::max());
+
+  // Raw pointers into the source and destination buffer
   auto d_in  = thrust::raw_pointer_cast(d_in_buffer.data());
   auto d_out = thrust::raw_pointer_cast(d_out_buffer.data());
 
