@@ -1,3 +1,4 @@
+#include "thrust/reduce.h"
 #include <nvbench/detail/throw.cuh>
 #include <nvbench/nvbench.cuh>
 
@@ -166,20 +167,22 @@ static void basic(nvbench::state &state,
     h_buffer_sizes[i] = (h_buffer_sizes[i] / sizeof(AtomicT)) * sizeof(AtomicT);
   }
 
-  // Compute the total bytes to be copied
-  ByteOffsetT num_total_bytes = 0;
-  for (BufferOffsetT i = 0; i < num_buffers; i++)
+  if (input_gen == buffer_order::CONSECUTIVE)
   {
-    if (input_gen == buffer_order::CONSECUTIVE)
-    {
-      h_buffer_src_offsets[i] = num_total_bytes;
-    }
-    if (output_gen == buffer_order::CONSECUTIVE)
-    {
-      h_buffer_dst_offsets[i] = num_total_bytes;
-    }
-    num_total_bytes += h_buffer_sizes[i];
+    thrust::exclusive_scan(std::cbegin(h_buffer_sizes),
+                           std::cend(h_buffer_sizes),
+                           std::begin(h_buffer_src_offsets));
   }
+  if (output_gen == buffer_order::CONSECUTIVE)
+  {
+    thrust::exclusive_scan(std::cbegin(h_buffer_sizes),
+                           std::cend(h_buffer_sizes),
+                           std::begin(h_buffer_dst_offsets));
+  }
+  // Compute the total bytes to be copied
+  ByteOffsetT num_total_bytes = thrust::reduce(std::cbegin(h_buffer_sizes),
+                                               std::cend(h_buffer_sizes),
+                                               ByteOffsetT{0});
 
   // Shuffle input buffer source-offsets
   std::uint_fast32_t shuffle_seed = 320981U;
