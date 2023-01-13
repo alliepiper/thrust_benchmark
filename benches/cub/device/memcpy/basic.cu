@@ -73,13 +73,15 @@ void generate_random_data(
  * @brief Used for generating a shuffled but cohesive sequence of output-buffer
  * offsets for the sequence of input-buffers.
  */
-template <typename BufferOffsetT, typename ByteOffsetT, typename BufferSizeT>
-std::vector<ByteOffsetT>
-get_shuffled_buffer_offsets(const std::vector<BufferSizeT> &buffer_sizes,
-                            const std::uint_fast32_t seed = 320981U)
+template <typename BufferOffsetT,
+          typename ByteOffsetT,
+          typename BufferSizeItT,
+          typename BufferOffsetsOutItT>
+void get_shuffled_buffer_offsets(BufferSizeItT buffer_sizes_it,
+                                 BufferOffsetT num_buffers,
+                                 BufferOffsetsOutItT new_offsets,
+                                 const std::uint_fast32_t seed = 320981U)
 {
-  BufferOffsetT num_buffers = static_cast<BufferOffsetT>(buffer_sizes.size());
-
   // We're remapping the i-th buffer to pmt_idxs[i]
   std::mt19937 rng(seed);
   std::vector<BufferOffsetT> pmt_idxs(num_buffers);
@@ -93,7 +95,7 @@ get_shuffled_buffer_offsets(const std::vector<BufferSizeT> &buffer_sizes,
   for (auto permuted_buffer_idx : pmt_idxs)
   {
     permuted_offsets.emplace_back(running_offset);
-    running_offset += buffer_sizes[permuted_buffer_idx];
+    running_offset += buffer_sizes_it[permuted_buffer_idx];
   }
 
   // Generate the scatter indexes that identify where each buffer was mapped to
@@ -103,13 +105,10 @@ get_shuffled_buffer_offsets(const std::vector<BufferSizeT> &buffer_sizes,
     scatter_idxs[pmt_idxs[i]] = i;
   }
 
-  std::vector<ByteOffsetT> new_offsets(num_buffers);
   for (BufferOffsetT i = 0; i < num_buffers; i++)
   {
     new_offsets[i] = permuted_offsets[scatter_idxs[i]];
   }
-
-  return new_offsets;
 }
 
 template <typename AtomicT, buffer_order buffer_order>
@@ -188,18 +187,22 @@ static void basic(nvbench::state &state,
   std::uint_fast32_t shuffle_seed = 320981U;
   if (input_gen == buffer_order::RANDOM)
   {
-    h_buffer_src_offsets =
-      get_shuffled_buffer_offsets<BufferOffsetT, ByteOffsetT>(h_buffer_sizes,
-                                                              shuffle_seed);
+    get_shuffled_buffer_offsets<BufferOffsetT, ByteOffsetT>(
+      h_buffer_sizes.data(),
+      static_cast<BufferOffsetT>(h_buffer_sizes.size()),
+      h_buffer_src_offsets.data(),
+      shuffle_seed);
     shuffle_seed += 42;
   }
 
   // Shuffle input buffer source-offsets
   if (output_gen == buffer_order::RANDOM)
   {
-    h_buffer_dst_offsets =
-      get_shuffled_buffer_offsets<BufferOffsetT, ByteOffsetT>(h_buffer_sizes,
-                                                              shuffle_seed);
+    get_shuffled_buffer_offsets<BufferOffsetT, ByteOffsetT>(
+      h_buffer_sizes.data(),
+      static_cast<BufferOffsetT>(h_buffer_sizes.size()),
+      h_buffer_dst_offsets.data(),
+      shuffle_seed);
   }
 
   // Get temporary storage requirements
