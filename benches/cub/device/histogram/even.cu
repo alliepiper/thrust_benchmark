@@ -1,13 +1,29 @@
 #include <nvbench/nvbench.cuh>
 
+#include <thrust/copy.h>
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 #include <thrust/sequence.h>
+#include <thrust/transform.h>
 // Why is this in detail?
 #include <thrust/detail/raw_pointer_cast.h>
 
 #include <cub/device/device_histogram.cuh>
 
 #include <tbm/range_generator.cuh>
+
+#include <cuda/std/type_traits>
+
+template <typename T>
+struct ModIntOp
+{
+  __host__ __device__ __forceinline__ T operator()(const T &val) const
+  {
+    return val % mod;
+  }
+
+  T mod;
+};
 
 template <typename T, int BinsCount, tbm::data_pattern Pattern>
 static void basic(nvbench::state &state,
@@ -18,8 +34,8 @@ static void basic(nvbench::state &state,
   const auto elements = static_cast<int>(state.get_int64("Elements"));
 
   auto input =
-    tbm::make_range_generator<T, tbm::iterator_style::pointer, Pattern>(
-      elements, BinsCount);
+      tbm::make_range_generator<T, tbm::iterator_style::pointer, Pattern>(
+          elements, BinsCount);
 
   const int num_bins = BinsCount;
   const int num_levels = num_bins + 1;
@@ -27,8 +43,21 @@ static void basic(nvbench::state &state,
   T lower_level = 0;
   T upper_level = elements;
 
-  if (Pattern == tbm::data_pattern::modulo_sequence)
+  // Whether bin computation in HistogramEven could potentially overflow
+  constexpr bool could_overflow = cuda::std::is_integral_v<T>;
+
+  // Integral types are generated within [0, BinsCount) to avoid overflows
+  if constexpr (could_overflow && Pattern != tbm::data_pattern::modulo_sequence)
   {
+    thrust::transform(thrust::device,
+                      input.cbegin(),
+                      input.cbegin() + elements,
+                      input.begin(),
+                      ModIntOp<T>{BinsCount});
+    upper_level = BinsCount;
+  }
+
+  if (Pattern == tbm::data_pattern::modulo_sequence) {
     upper_level = BinsCount;
   }
 
